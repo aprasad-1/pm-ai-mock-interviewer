@@ -1,36 +1,96 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PM Interviewer - Local Development Setup
 
-## Getting Started
+AI-powered PM interview practice platform built with Next.js 15, Firebase, and Tailwind CSS.
 
-First, run the development server:
+## Quick Setup
 
+### 1. Clone and Install
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repo-url>
+cd pm-ai-mock-interviewer
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Environment Variables
+Create `.env.local` in root:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+# Get these from Firebase 
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 
-## Learn More
+FIREBASE_PROJECT_ID=your_project_id
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your_project.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nyour_private_key_content\n-----END PRIVATE KEY-----\n"
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 4. Run Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Structure
+```
+app/
+├── (auth)/          # Sign-in/up pages
+├── (root)/          # Protected main app
+├── globals.css      # Tailwind styles
+└── layout.tsx       # Root layout
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+components/
+├── ui/              # shadcn/ui components
+├── AuthForm.tsx     # Login/signup form
+├── InterviewCard.tsx
+└── UserMenu.tsx     # Logout functionality
 
-## Deploy on Vercel
+firebase/
+├── client.ts        # Firebase client config
+└── admin.ts         # Firebase admin config
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+lib/actions/
+├── auth.action.ts   # Authentication server actions
+└── general.action.ts # Data fetching
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Key Features Working
+- ✅ Email/password authentication
+- ✅ Google sign-in
+- ✅ Session management with cookies
+- ✅ Route protection
+- ✅ Responsive UI with Tailwind CSS v4
+- ✅ Toast notifications
+
+## Development Commands
+```bash
+npm run dev          # Start dev server
+npm run build        # Build for production
+npm run lint         # Run ESLint
+```
+
+## Tech Stack
+- **Next.js 15** - App Router, Server Actions
+- **TypeScript** - Type safety
+- **Firebase** - Auth + Firestore
+- **Tailwind CSS v4** - Styling
+- **shadcn/ui** - UI components
+- **React Hook Form + Zod** - Form handling
+
+## Common Issues
+- **Firestore index errors**: Click the provided link in error to create indexes
+- **Auth not working**: Check Firebase config and authorized domains
+- **Env vars not loading**: Restart dev server after adding `.env.local`
+
+## Next Steps
+- Add interview creation flow
+- Implement AI interviewer chat
+- Add interview history/results
+- Deploy to Vercel
+
+---
+*Questions? Check the terminal output or Firebase console for detailed error messages.*
