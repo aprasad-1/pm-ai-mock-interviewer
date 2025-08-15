@@ -1,4 +1,5 @@
 import React from 'react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import InterviewCard from '@/components/InterviewCard'
 import { getCurrentUser } from '@/lib/actions/auth.action'
@@ -31,9 +32,11 @@ const HomePage = async () => {
           Practice with our AI interviewer and get instant feedback to improve your performance.
           Perfect your answers for technical and behavioral questions.
         </p>
-        <Button className="btn-primary text-lg px-8 py-4">
-          Start an Interview
-        </Button>
+        <Link href="/interview?type=product-design">
+          <Button className="btn-primary text-lg px-8 py-4">
+            Start an Interview
+          </Button>
+        </Link>
       </section>
 
       {/* Your Interviews Section */}

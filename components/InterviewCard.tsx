@@ -1,6 +1,10 @@
+'use client'
+
 import React from 'react'
+import { useRouter } from 'next/navigation'
 import { Interview } from '@/lib/actions/general.action'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 
 interface InterviewCardProps {
   interview: Interview
@@ -8,6 +12,7 @@ interface InterviewCardProps {
 }
 
 const InterviewCard = ({ interview, isUserInterview = false }: InterviewCardProps) => {
+  const router = useRouter()
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'beginner':
@@ -27,8 +32,54 @@ const InterviewCard = ({ interview, isUserInterview = false }: InterviewCardProp
         return 'text-blue-400 bg-blue-400/10'
       case 'behavioral':
         return 'text-purple-400 bg-purple-400/10'
+      case 'product-design':
+        return 'text-indigo-400 bg-indigo-400/10'
       default:
         return 'text-gray-400 bg-gray-400/10'
+    }
+  }
+
+  // Provide fallback values for missing data
+  const technologies = interview.technologies || []
+  const role = interview.role || 'Interview'
+  const type = interview.type || 'general'
+  const difficulty = interview.difficulty || 'intermediate'
+  const duration = interview.duration || 30
+  const createdAt = interview.createdAt || new Date().toISOString()
+
+  const handleStartInterview = async () => {
+    try {
+      // Navigate to interview page with parameters
+      const searchParams = new URLSearchParams({
+        type: type,
+        interviewId: interview.id,
+        role: role
+      })
+      
+      router.push(`/interview?${searchParams.toString()}`)
+      
+    } catch (error) {
+      console.error('Error starting interview:', error)
+      // Only show error toast for actual failures
+      toast.error('Failed to start interview. Please try again.')
+    }
+  }
+
+  const handleResumeInterview = async () => {
+    try {
+      const searchParams = new URLSearchParams({
+        type: type,
+        interviewId: interview.id,
+        role: role,
+        resume: 'true'
+      })
+      
+      router.push(`/interview?${searchParams.toString()}`)
+      
+    } catch (error) {
+      console.error('Error resuming interview:', error)
+      // Only show error toast for actual failures
+      toast.error('Failed to resume interview. Please try again.')
     }
   }
 
@@ -37,44 +88,48 @@ const InterviewCard = ({ interview, isUserInterview = false }: InterviewCardProp
       <div className="card-interview">
         <div className="flex flex-col gap-4">
           <div className="flex items-start justify-between">
-            <h3 className="text-xl font-semibold text-white">{interview.role}</h3>
+            <h3 className="text-xl font-semibold text-white">{role}</h3>
             <div className="flex gap-2">
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(interview.type)}`}>
-                {interview.type}
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(type)}`}>
+                {type === 'behavioral' && role.includes('Product Design') ? 'product-design' : type}
               </span>
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(interview.difficulty)}`}>
-                {interview.difficulty}
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(difficulty)}`}>
+                {difficulty}
               </span>
             </div>
           </div>
 
           <div className="flex items-center gap-2 text-sm text-light-100">
-            <span>{interview.duration || 30} min</span>
-            <span>•</span>
-            <span>{(interview.technologies?.length || 0)} technologies</span>
+            <span>{duration} min</span>
+            {technologies.length > 0 && (
+              <>
+                <span>•</span>
+                <span>{technologies.length} {technologies.length === 1 ? 'technology' : 'technologies'}</span>
+              </>
+            )}
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            {(interview.technologies || []).map((tech, index) => (
-              <div key={index} className="group relative">
-                <div className="w-8 h-8 bg-dark-200 rounded-full flex items-center justify-center text-xs font-bold text-primary-200">
-                  {tech.charAt(0).toUpperCase()}
+          {technologies.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {technologies.map((tech, index) => (
+                <div key={index} className="group relative">
+                  <div className="w-8 h-8 bg-dark-200 rounded-full flex items-center justify-center text-xs font-bold text-primary-200">
+                    {tech.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="tech-tooltip">
+                    {tech}
+                  </span>
                 </div>
-                <span className="tech-tooltip">
-                  {tech}
-                </span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="text-xs text-light-400">
-            Created {new Date(interview.createdAt).toLocaleDateString()}
-          </div>
+        <div className="flex items-center justify-end">
           <Button 
             className={isUserInterview ? "btn-secondary" : "btn-primary"}
             size="sm"
+            onClick={isUserInterview ? handleResumeInterview : handleStartInterview}
           >
             {isUserInterview ? 'Resume' : 'Start Interview'}
           </Button>
