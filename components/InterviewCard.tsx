@@ -49,13 +49,13 @@ const InterviewCard = ({ interview, isUserInterview = false }: InterviewCardProp
           </div>
 
           <div className="flex items-center gap-2 text-sm text-light-100">
-            <span>{interview.duration} min</span>
+            <span>{interview.duration || 30} min</span>
             <span>•</span>
-            <span>{interview.technologies.length} technologies</span>
+            <span>{(interview.technologies?.length || 0)} technologies</span>
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {interview.technologies.map((tech, index) => (
+            {(interview.technologies || []).map((tech, index) => (
               <div key={index} className="group relative">
                 <div className="w-8 h-8 bg-dark-200 rounded-full flex items-center justify-center text-xs font-bold text-primary-200">
                   {tech.charAt(0).toUpperCase()}

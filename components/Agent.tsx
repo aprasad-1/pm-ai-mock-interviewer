@@ -1,11 +1,17 @@
-import React from "react";
+"use client";
+
+import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { vapi } from "@/lib/vapi.sdk";
+import { CreateAssistantDTO } from "@vapi-ai/web/dist/api";
 
 interface AgentProps {
   userName: string;
   userID: string;
   type: string;
+  assistantId?: string;
+  interviewQuestions?: string[];
 }
 
 enum CallStatus {
@@ -16,20 +22,125 @@ enum CallStatus {
   FINISHED = "FINISHED",
 }
 
-const Agent = ({ userName }: AgentProps) => {
-  const isSpeaking = true;
-  const callStatus = CallStatus.FINISHED;
-  const messages = [
-    "What is your name?",
-    "My name is John Doe",
-    "What is your age?",
-    "I am 25 years old",
-    "What is your gender?",
-    "I am a male",
-    "What is your occupation?",
-  ]
+const Agent = ({ userName, userID, assistantId, interviewQuestions = [] }: AgentProps) => {
+  const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [messages, setMessages] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
   const lastMessage = messages[messages.length - 1];
-  
+
+  // Initialize Vapi event listeners
+  useEffect(() => {
+    const handleCallStart = () => {
+      setCallStatus(CallStatus.CONNECTING);
+      setIsLoading(true);
+    };
+
+    const handleCallEnd = () => {
+      setCallStatus(CallStatus.FINISHED);
+      setIsSpeaking(false);
+      setIsLoading(false);
+    };
+
+    const handleSpeechStart = () => {
+      setIsSpeaking(true);
+    };
+
+    const handleSpeechEnd = () => {
+      setIsSpeaking(false);
+    };
+
+    const handleMessage = (message: any) => {
+      if (message.type === 'transcript' && message.transcript) {
+        setMessages(prev => [...prev, message.transcript]);
+      }
+    };
+
+    const handleError = (error: any) => {
+      console.error('Vapi error:', error);
+      setCallStatus(CallStatus.FINISHED);
+      setIsLoading(false);
+      setIsSpeaking(false);
+    };
+
+    // Add event listeners
+    vapi.on('call-start', handleCallStart);
+    vapi.on('call-end', handleCallEnd);
+    vapi.on('speech-start', handleSpeechStart);
+    vapi.on('speech-end', handleSpeechEnd);
+    vapi.on('message', handleMessage);
+    vapi.on('error', handleError);
+
+    // Cleanup event listeners
+    return () => {
+      vapi.off('call-start', handleCallStart);
+      vapi.off('call-end', handleCallEnd);
+      vapi.off('speech-start', handleSpeechStart);
+      vapi.off('speech-end', handleSpeechEnd);
+      vapi.off('message', handleMessage);
+      vapi.off('error', handleError);
+    };
+  }, []);
+
+  // Start call function
+  const startCall = useCallback(async () => {
+    if (callStatus === CallStatus.ACTIVE) return;
+
+    try {
+      setCallStatus(CallStatus.CONNECTING);
+      setIsLoading(true);
+      
+      // Use assistantId if provided, otherwise create inline assistant
+      if (assistantId) {
+        await vapi.start(assistantId);
+      } else {
+        // Create inline assistant configuration
+        const assistantConfig: CreateAssistantDTO = {
+          name: "Interview Assistant",
+          firstMessage: "Hello! I'm your AI interviewer. Let's begin with your interview. Are you ready?",
+          model: {
+            provider: "openai",
+            model: "gpt-4",
+            messages: [
+              {
+                role: "system",
+                content: `You are a professional interviewer. Ask these questions one by one: ${interviewQuestions.join(', ')}. Keep responses natural and conversational.`
+              }
+            ]
+          },
+          voice: {
+            provider: "11labs",
+            voiceId: "sarah"
+          },
+          transcriber: {
+            provider: "deepgram" as const,
+            model: "nova-2" as const,
+            language: "en" as const
+          }
+        };
+        
+        await vapi.start(assistantConfig);
+      }
+      setCallStatus(CallStatus.ACTIVE);
+    } catch (error) {
+      console.error('Failed to start call:', error);
+      setCallStatus(CallStatus.FINISHED);
+      setIsLoading(false);
+    }
+  }, [callStatus, assistantId, interviewQuestions]);
+
+  // End call function
+  const endCall = useCallback(async () => {
+    try {
+      await vapi.stop();
+      setCallStatus(CallStatus.FINISHED);
+      setIsSpeaking(false);
+    } catch (error) {
+      console.error('Failed to end call:', error);
+    }
+  }, []);
+
   return (
     <>
     <div className="call-view">
@@ -60,22 +171,31 @@ const Agent = ({ userName }: AgentProps) => {
     )}
 
     <div className="w-full flex justify-center">
-      {callStatus != 'ACTIVE' ? (
-        <button className = "relative btn-call">
-          <span className = {cn('absolute animate-ping rounded-full', callStatus != "CONNECTING" & "hidden")}/>
+      {callStatus !== CallStatus.ACTIVE ? (
+        <button 
+          className="relative btn-call" 
+          onClick={startCall}
+          disabled={isLoading || callStatus === CallStatus.CONNECTING}
+        >
+          <span className={cn(
+            'absolute animate-ping rounded-full', 
+            callStatus !== CallStatus.CONNECTING && "hidden"
+          )}/>
 
           <span>
-            {callStatus === 'INACTIVE' || callStatus === 'FINISHED' ? 'Call' : '. . .'}  
+            {callStatus === CallStatus.INACTIVE || callStatus === CallStatus.FINISHED 
+              ? 'Start Interview' 
+              : 'Connecting...'}  
           </span>
-
         </button>
       ) : (
-        <button className = "btn-disconnect">
-          End
+        <button 
+          className="btn-disconnect"
+          onClick={endCall}
+        >
+          End Interview
         </button>
       )}
-
-
     </div>
     </>
    
