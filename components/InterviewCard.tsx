@@ -8,6 +8,14 @@ interface InterviewCardProps {
 }
 
 const InterviewCard = ({ interview, isUserInterview = false }: InterviewCardProps) => {
+  // Provide fallback values for missing data
+  const technologies = interview.technologies || []
+  const role = interview.role || 'Interview'
+  const type = interview.type || 'general'
+  const difficulty = interview.difficulty || 'intermediate'
+  const duration = interview.duration || 30
+  const createdAt = interview.createdAt || new Date().toISOString()
+
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'beginner':
@@ -37,40 +45,42 @@ const InterviewCard = ({ interview, isUserInterview = false }: InterviewCardProp
       <div className="card-interview">
         <div className="flex flex-col gap-4">
           <div className="flex items-start justify-between">
-            <h3 className="text-xl font-semibold text-white">{interview.role}</h3>
+            <h3 className="text-xl font-semibold text-white">{role}</h3>
             <div className="flex gap-2">
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(interview.type)}`}>
-                {interview.type}
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(type)}`}>
+                {type}
               </span>
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(interview.difficulty)}`}>
-                {interview.difficulty}
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(difficulty)}`}>
+                {difficulty}
               </span>
             </div>
           </div>
 
           <div className="flex items-center gap-2 text-sm text-light-100">
-            <span>{interview.duration} min</span>
+            <span>{duration} min</span>
             <span>•</span>
-            <span>{interview.technologies.length} technologies</span>
+            <span>{technologies.length} {technologies.length === 1 ? 'technology' : 'technologies'}</span>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            {interview.technologies.map((tech, index) => (
-              <div key={index} className="group relative">
-                <div className="w-8 h-8 bg-dark-200 rounded-full flex items-center justify-center text-xs font-bold text-primary-200">
-                  {tech.charAt(0).toUpperCase()}
+          {technologies.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {technologies.map((tech, index) => (
+                <div key={index} className="group relative">
+                  <div className="w-8 h-8 bg-dark-200 rounded-full flex items-center justify-center text-xs font-bold text-primary-200">
+                    {tech.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="tech-tooltip">
+                    {tech}
+                  </span>
                 </div>
-                <span className="tech-tooltip">
-                  {tech}
-                </span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex items-center justify-between">
           <div className="text-xs text-light-400">
-            Created {new Date(interview.createdAt).toLocaleDateString()}
+            Created {new Date(createdAt).toLocaleDateString()}
           </div>
           <Button 
             className={isUserInterview ? "btn-secondary" : "btn-primary"}
