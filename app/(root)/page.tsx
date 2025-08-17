@@ -2,22 +2,24 @@ import React from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import InterviewCard from '@/components/InterviewCard'
+
+import InterviewFeedbackCard from '@/components/InterviewFeedbackCard'
+import LandingPage from '@/components/LandingPage'
 import { getCurrentUser } from '@/lib/actions/auth.action'
-import { getInterviews } from '@/lib/actions/general.action'
+import { getInterviews, getUserInterviewFeedbacks } from '@/lib/actions/general.action'
 
 const HomePage = async () => {
   const user = await getCurrentUser()
   
+  // Show landing page for non-authenticated users
   if (!user) {
-    return <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-200 mx-auto mb-4"></div>
-        <p className="text-light-100">Loading...</p>
-      </div>
-    </div> // This should not happen due to layout protection
+    return <LandingPage />
   }
   
-  const { userInterviews, otherInterviews } = await getInterviews(user.uid)
+  const [{ userInterviews, otherInterviews }, { feedbacks }] = await Promise.all([
+    getInterviews(user.uid),
+    getUserInterviewFeedbacks(user.uid)
+  ])
 
   return (
     <div className="space-y-12">
@@ -39,22 +41,24 @@ const HomePage = async () => {
         </Link>
       </section>
 
-      {/* Your Interviews Section */}
+
+      {/* Interview Analysis & Feedback Section */}
       <section>
         <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl font-semibold text-white">Your Interviews</h2>
-          <Button className="btn-secondary">
-            Create New Interview
-          </Button>
+          <h2 className="text-3xl font-semibold text-white">Interview Analysis & Feedback</h2>
+          <Link href="/interview">
+            <Button variant="outline" className="text-primary-200 border-primary-200">
+              New Analysis
+            </Button>
+          </Link>
         </div>
         
-        {userInterviews.length > 0 ? (
+        {feedbacks.length > 0 ? (
           <div className="interviews-section">
-            {userInterviews.map((interview) => (
-              <InterviewCard 
-                key={interview.id} 
-                interview={interview} 
-                isUserInterview={true}
+            {feedbacks.map((feedbackData) => (
+              <InterviewFeedbackCard 
+                key={feedbackData.id} 
+                feedbackData={feedbackData}
               />
             ))}
           </div>
@@ -62,14 +66,16 @@ const HomePage = async () => {
           <div className="card-border">
             <div className="card p-8 text-center">
               <h3 className="text-xl font-semibold text-white mb-4">
-                No interviews yet
+                No interview analysis yet
               </h3>
               <p className="text-light-100 mb-6">
-                Create your first interview to start practicing with our AI interviewer.
+                Complete an interview to receive detailed AI-powered feedback and analysis.
               </p>
-              <Button className="btn-primary">
-                Create Your First Interview
-              </Button>
+              <Link href="/interview">
+                <Button className="btn-primary">
+                  Start Your First Interview
+                </Button>
+              </Link>
             </div>
           </div>
         )}

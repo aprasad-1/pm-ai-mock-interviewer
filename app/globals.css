@@ -271,7 +271,7 @@
   }
 
   .interviews-section {
-    @apply flex flex-wrap gap-4 max-lg:flex-col w-full items-stretch;
+    @apply grid grid-cols-1 md:grid-cols-2 gap-4 w-full;
   }
 
   .interview-text {

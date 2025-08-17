@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { vapi } from "@/lib/vapi.sdk";
 import { CreateAssistantDTO } from "@vapi-ai/web/dist/api";
-import { saveCallTranscript } from "@/lib/actions/general.action";
+import { saveCallTranscript, createInterviewSession, updateInterviewSession, analyzeTranscript } from "@/lib/actions/general.action";
 import { Button } from "@/components/ui/button";
 import { Square } from "lucide-react";
 import { interviewer } from "@/constants";
@@ -35,6 +35,7 @@ const Agent = ({ userName, userID, assistantId, interviewQuestions = [] }: Agent
   const [fullTranscript, setFullTranscript] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [callStartTime, setCallStartTime] = useState<string>('');
+  const [sessionId, setSessionId] = useState<string>('');
 
   const lastMessage = messages[messages.length - 1];
 
@@ -185,6 +186,18 @@ const Agent = ({ userName, userID, assistantId, interviewQuestions = [] }: Agent
       setCallStatus(CallStatus.CONNECTING);
       setIsLoading(true);
       
+      // Create interview session
+      const sessionResult = await createInterviewSession({
+        userId: userID,
+        interviewId: assistantId,
+        interviewTitle: assistantId ? 'AI Product Manager Interview' : 'Product Design Questions'
+      });
+      
+      if (sessionResult.success && sessionResult.sessionId) {
+        setSessionId(sessionResult.sessionId);
+        console.log('✅ Interview session created:', sessionResult.sessionId);
+      }
+      
       // Use assistantId if provided, otherwise use the predefined interviewer configuration
       if (assistantId) {
         await vapi!.start(assistantId);
@@ -265,9 +278,45 @@ const Agent = ({ userName, userID, assistantId, interviewQuestions = [] }: Agent
           callEndTime,
         });
 
+        // Update interview session
+        if (sessionId) {
+          await updateInterviewSession({
+            sessionId,
+            endTime: callEndTime,
+            duration,
+            status: 'completed',
+            transcriptId: result.success ? result.transcriptId : undefined
+          });
+          console.log('✅ Interview session updated');
+        }
+
         console.log('📄 Manual save result:', result);
 
-        if (result.success) {
+        if (result.success && result.transcriptId) {
+          console.log('🤖 Starting AI analysis...');
+          
+          // Analyze transcript and generate feedback
+          try {
+            const analysisResult = await analyzeTranscript({
+              transcriptId: result.transcriptId,
+              interviewQuestions
+            });
+
+            if (analysisResult.success && analysisResult.feedback) {
+              // Update session with score and feedback ID
+              if (sessionId) {
+                await updateInterviewSession({
+                  sessionId,
+                  score: analysisResult.feedback.totalScore,
+                  feedbackId: result.transcriptId // Using transcriptId as feedbackId for now
+                });
+              }
+              console.log('✅ Analysis completed with score:', analysisResult.feedback.totalScore);
+            }
+          } catch (analysisError) {
+            console.error('❌ Analysis failed:', analysisError);
+          }
+
           console.log('🚀 Manual navigation to feedback page...');
           router.push(`/feedback?transcriptId=${result.transcriptId}`);
         } else {
@@ -339,18 +388,16 @@ const Agent = ({ userName, userID, assistantId, interviewQuestions = [] }: Agent
     <div className="call-view">
       <div className="card-interviewer">
         <div className="avatar">
-
           <img src="/ai-avatar.png" alt="vapi" width={65} height={54} className="object-cover"/>
           {isSpeaking && <span className="animate-speak"></span>}
-
         </div>
         <h3>AI Interviewer</h3>
       </div>
-      <div className="card-border">
-        <div className="card-border-content">
-          <Image src="/user-avatar.png" alt="user avatar" width={540} height={540} className="rounded-full object-cover" />
-          <h3>{userName}</h3>
+      <div className="card-interviewer">
+        <div className="avatar">
+          <Image src="/user-avatar.png" alt="user avatar" width={65} height={54} className="rounded-full object-cover" />
         </div>
+        <h3>{userName}</h3>
       </div>
     </div>
 

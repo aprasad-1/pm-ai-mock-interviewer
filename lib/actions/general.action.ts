@@ -17,6 +17,22 @@ export interface Interview {
   updatedAt: string
 }
 
+export interface InterviewSession {
+  id: string
+  userId: string
+  interviewId?: string
+  interviewTitle: string
+  startTime: string
+  endTime?: string
+  duration: number // in seconds
+  score?: number // 1-10
+  status: 'completed' | 'in_progress' | 'cancelled'
+  transcriptId?: string
+  feedbackId?: string
+  createdAt: string
+  updatedAt: string
+}
+
 export async function createSampleProductDesignInterview() {
   try {
     const sampleInterview = {
@@ -259,5 +275,346 @@ export async function analyzeTranscript(params: {
   } catch (error) {
     console.error('Error analyzing transcript:', error)
     throw new Error('Failed to analyze transcript')
+  }
+}
+
+// Interview Session Management
+export async function createInterviewSession(params: {
+  userId: string
+  interviewId?: string
+  interviewTitle: string
+}) {
+  try {
+    const sessionData: Omit<InterviewSession, 'id'> = {
+      userId: params.userId,
+      interviewId: params.interviewId,
+      interviewTitle: params.interviewTitle,
+      startTime: new Date().toISOString(),
+      duration: 0,
+      status: 'in_progress',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+
+    const docRef = await adminDb.collection('interview-sessions').add(sessionData)
+    
+    return { 
+      success: true, 
+      sessionId: docRef.id,
+      message: 'Interview session created successfully' 
+    }
+  } catch (error) {
+    console.error('Error creating interview session:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      message: 'Failed to create interview session'
+    }
+  }
+}
+
+export async function updateInterviewSession(params: {
+  sessionId: string
+  endTime?: string
+  duration?: number
+  score?: number
+  status?: 'completed' | 'cancelled'
+  transcriptId?: string
+  feedbackId?: string
+}) {
+  try {
+    const updateData: Partial<InterviewSession> = {
+      ...params,
+      updatedAt: new Date().toISOString(),
+    }
+
+    // Remove sessionId from update data
+    delete (updateData as any).sessionId
+
+    await adminDb.collection('interview-sessions').doc(params.sessionId).update(updateData)
+    
+    return { 
+      success: true, 
+      message: 'Interview session updated successfully' 
+    }
+  } catch (error) {
+    console.error('Error updating interview session:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      message: 'Failed to update interview session'
+    }
+  }
+}
+
+export async function getUserInterviewSessions(userId: string) {
+  try {
+    console.log('🔍 Fetching sessions for user:', userId);
+    
+    // Simplified query without orderBy to avoid index issues
+    const sessionsQuery = adminDb
+      .collection('interview-sessions')
+      .where('userId', '==', userId)
+      .limit(20)
+
+    const sessionsSnapshot = await sessionsQuery.get()
+    const sessions: InterviewSession[] = []
+
+    sessionsSnapshot.forEach((doc) => {
+      sessions.push({
+        id: doc.id,
+        ...doc.data(),
+      } as InterviewSession)
+    })
+
+    // Sort client-side to avoid Firestore index requirements
+    sessions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+
+    console.log('✅ Found sessions:', {
+      count: sessions.length,
+      sessions: sessions.map(s => ({ id: s.id, title: s.interviewTitle, status: s.status }))
+    });
+
+    return {
+      success: true,
+      sessions
+    }
+  } catch (error) {
+    console.error('Error fetching interview sessions:', error)
+    // Return empty array instead of throwing to prevent crashes
+    return {
+      success: false,
+      sessions: [] as InterviewSession[],
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }
+  }
+}
+
+export async function getInterviewFeedback(feedbackId: string) {
+  try {
+    const feedbackDoc = await adminDb.collection('interview-feedback').doc(feedbackId).get()
+    
+    if (!feedbackDoc.exists) {
+      return { success: false, error: 'Feedback not found' }
+    }
+
+    const feedbackData = feedbackDoc.data()
+    
+    return { 
+      success: true, 
+      feedback: feedbackData?.feedback as InterviewFeedback
+    }
+  } catch (error) {
+    console.error('Error fetching feedback:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }
+  }
+}
+
+export async function getUserInterviewSessionsWithFeedback(userId: string) {
+  try {
+    const { sessions } = await getUserInterviewSessions(userId)
+    
+    // If no sessions exist, create a sample one for demonstration
+    if (sessions.length === 0) {
+      console.log('🎯 No sessions found, creating sample session...');
+      await createSampleInterviewSession(userId);
+      // Fetch again after creating sample
+      const { sessions: newSessions } = await getUserInterviewSessions(userId)
+      
+      const sessionsWithFeedback = newSessions.map(session => ({
+        session,
+        feedback: null
+      }))
+      
+      return {
+        success: true,
+        sessionsWithFeedback
+      }
+    }
+    
+    // Get feedback for sessions that have feedback IDs
+    const sessionsWithFeedback = await Promise.all(
+      sessions.map(async (session) => {
+        if (session.feedbackId) {
+          const { feedback } = await getInterviewFeedback(session.feedbackId)
+          return { session, feedback }
+        }
+        return { session, feedback: null }
+      })
+    )
+
+    return {
+      success: true,
+      sessionsWithFeedback
+    }
+  } catch (error) {
+    console.error('Error fetching sessions with feedback:', error)
+    return {
+      success: false,
+      sessionsWithFeedback: [],
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }
+  }
+}
+
+// Helper function to create a sample interview session for testing
+export async function getUserInterviewFeedbacks(userId: string) {
+  try {
+    console.log('🔍 Fetching feedback for user:', userId);
+    
+    const feedbackQuery = adminDb
+      .collection('interview-feedback')
+      .where('userId', '==', userId)
+      .limit(20)
+
+    const feedbackSnapshot = await feedbackQuery.get()
+    const feedbacks: Array<{
+      id: string
+      userId: string
+      transcriptId: string
+      interviewId?: string
+      feedback: InterviewFeedback
+      analyzedAt: string
+    }> = []
+
+    feedbackSnapshot.forEach((doc) => {
+      feedbacks.push({
+        id: doc.id,
+        ...doc.data(),
+      } as any)
+    })
+
+    // If no feedbacks exist, create a sample one for demonstration
+    if (feedbacks.length === 0) {
+      console.log('🎯 No feedbacks found, creating sample feedback...');
+      await createSampleInterviewFeedback(userId);
+      // Fetch again after creating sample
+      const newFeedbackSnapshot = await feedbackQuery.get()
+      newFeedbackSnapshot.forEach((doc) => {
+        feedbacks.push({
+          id: doc.id,
+          ...doc.data(),
+        } as any)
+      })
+    }
+
+    // Sort client-side by analyzedAt (newest first)
+    feedbacks.sort((a, b) => new Date(b.analyzedAt).getTime() - new Date(a.analyzedAt).getTime())
+
+    console.log('✅ Found feedbacks:', {
+      count: feedbacks.length,
+      feedbacks: feedbacks.map(f => ({ 
+        id: f.id, 
+        score: f.feedback.totalScore, 
+        analyzedAt: f.analyzedAt 
+      }))
+    });
+
+    return {
+      success: true,
+      feedbacks
+    }
+  } catch (error) {
+    console.error('Error fetching interview feedbacks:', error)
+    return {
+      success: false,
+      feedbacks: [],
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }
+  }
+}
+
+// Helper function to create sample feedback for testing
+export async function createSampleInterviewFeedback(userId: string) {
+  try {
+    const sampleFeedback: InterviewFeedback = {
+      totalScore: 8,
+      categoryScores: [
+        {
+          name: "Communication Skills",
+          score: 9,
+          comment: "Excellent articulation and clear explanation of complex concepts. Demonstrated strong listening skills and asked thoughtful follow-up questions."
+        },
+        {
+          name: "Product Thinking",
+          score: 8,
+          comment: "Strong user-centric approach with good understanding of product strategy. Could improve on competitive analysis depth."
+        },
+        {
+          name: "Leadership & Collaboration",
+          score: 7,
+          comment: "Good examples of team leadership and stakeholder management. Would benefit from more specific metrics on team performance."
+        },
+        {
+          name: "Technical Understanding",
+          score: 8,
+          comment: "Solid grasp of technical concepts and system design principles. Effectively communicated technical trade-offs to non-technical stakeholders."
+        },
+        {
+          name: "Business Acumen",
+          score: 8,
+          comment: "Strong understanding of market dynamics and business metrics. Demonstrated good analytical thinking for ROI calculations."
+        }
+      ],
+      strengths: [
+        "Excellent communication skills with clear and concise explanations",
+        "Strong user empathy and customer-centric thinking",
+        "Good analytical approach to problem-solving",
+        "Effective use of data to support decisions",
+        "Strong understanding of product lifecycle management"
+      ],
+      areasForImprovement: [
+        "Could provide more specific examples of handling difficult stakeholders",
+        "Would benefit from deeper competitive analysis skills",
+        "Could improve on technical architecture discussions",
+        "More focus on international market considerations needed"
+      ],
+      finalAssessment: "Strong candidate with excellent communication skills and solid product thinking. Demonstrates good leadership potential and technical understanding. With some additional experience in competitive analysis and stakeholder management, would be well-suited for senior PM roles."
+    }
+
+    const feedbackDoc = {
+      transcriptId: 'sample-transcript-id',
+      userId,
+      interviewId: null,
+      feedback: sampleFeedback,
+      analyzedAt: new Date().toISOString(),
+    }
+
+    const docRef = await adminDb.collection('interview-feedback').add(feedbackDoc)
+    console.log('✅ Sample feedback created:', docRef.id);
+    
+    return { success: true, feedbackId: docRef.id }
+  } catch (error) {
+    console.error('Error creating sample feedback:', error)
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+  }
+}
+
+// Helper function to create a sample interview session for testing
+export async function createSampleInterviewSession(userId: string) {
+  try {
+    const sampleSession: Omit<InterviewSession, 'id'> = {
+      userId,
+      interviewTitle: 'Product Manager Interview - Sample',
+      startTime: new Date(Date.now() - 25 * 60 * 1000).toISOString(), // 25 minutes ago
+      endTime: new Date().toISOString(),
+      duration: 1500, // 25 minutes in seconds
+      score: 8, // Sample score
+      status: 'completed',
+      transcriptId: 'sample-transcript',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+
+    const docRef = await adminDb.collection('interview-sessions').add(sampleSession)
+    console.log('✅ Sample session created:', docRef.id);
+    
+    return { success: true, sessionId: docRef.id }
+  } catch (error) {
+    console.error('Error creating sample session:', error)
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
   }
 }

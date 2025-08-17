@@ -24,13 +24,19 @@ const RootLayout = async ({
 }) => {
   const user = await getCurrentUser()
   
-  if (!user) {
-    redirect('/sign-in')
+  // Only show navbar for authenticated users
+  if (user) {
+    return (
+      <div className="root-layout">
+        <Navbar user={user} />
+        {children}
+      </div>
+    )
   }
 
+  // For non-authenticated users, render without navbar (for landing page)
   return (
     <div className="root-layout">
-      <Navbar user={user} />
       {children}
     </div>
   )
