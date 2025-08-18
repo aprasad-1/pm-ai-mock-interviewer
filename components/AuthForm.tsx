@@ -50,8 +50,8 @@ const AuthForm = ({ type }: AuthFormProps) => {
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: type === 'sign-up' 
-      ? { name: '', email: '', password: '' }
-      : { email: '', password: '' },
+      ? { name: '', email: '', password: '' } as FormData
+      : { email: '', password: '' } as FormData,
   })
 
   const handleGoogleSignIn = async () => {
@@ -80,14 +80,14 @@ const AuthForm = ({ type }: AuthFormProps) => {
       
       toast.success('Signed in with Google successfully!')
       router.push('/')
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Google sign-in error:', error)
       
       let errorMessage = 'Failed to sign in with Google.'
       
-      if (error.code === 'auth/popup-closed-by-user') {
+      if (error && typeof error === 'object' && 'code' in error && error.code === 'auth/popup-closed-by-user') {
         errorMessage = 'Sign-in was cancelled.'
-      } else if (error.code === 'auth/popup-blocked') {
+      } else if (error && typeof error === 'object' && 'code' in error && error.code === 'auth/popup-blocked') {
         errorMessage = 'Popup was blocked. Please allow popups and try again.'
       }
       
@@ -108,7 +108,7 @@ const AuthForm = ({ type }: AuthFormProps) => {
         // Save user data to Firestore via server action
         await signUp({
           uid: userCredential.user.uid,
-          name: (data as any).name,
+          name: (data as { name: string; email: string; password: string }).name,
           email: data.email,
         })
         
@@ -132,20 +132,23 @@ const AuthForm = ({ type }: AuthFormProps) => {
         toast.success('Signed in successfully!')
         router.push('/')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Authentication error:', error)
       
       // Handle Firebase Auth errors
       let errorMessage = 'An error occurred. Please try again.'
       
-      if (error.code === 'auth/email-already-in-use') {
-        errorMessage = 'An account with this email already exists.'
-      } else if (error.code === 'auth/weak-password') {
-        errorMessage = 'Password should be at least 6 characters.'
-      } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        errorMessage = 'Invalid email or password.'
-      } else if (error.code === 'auth/invalid-email') {
-        errorMessage = 'Please enter a valid email address.'
+      if (error && typeof error === 'object' && 'code' in error) {
+        const errorCode = error.code as string;
+        if (errorCode === 'auth/email-already-in-use') {
+          errorMessage = 'An account with this email already exists.'
+        } else if (errorCode === 'auth/weak-password') {
+          errorMessage = 'Password should be at least 6 characters.'
+        } else if (errorCode === 'auth/user-not-found' || errorCode === 'auth/wrong-password') {
+          errorMessage = 'Invalid email or password.'
+        } else if (errorCode === 'auth/invalid-email') {
+          errorMessage = 'Please enter a valid email address.'
+        }
       }
       
       toast.error(errorMessage)
@@ -172,7 +175,7 @@ const AuthForm = ({ type }: AuthFormProps) => {
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="form space-y-4">
-              {isSignUp && (
+              {/* {isSignUp && (
                 <FormField
                   control={form.control}
                   name="name"
@@ -190,7 +193,7 @@ const AuthForm = ({ type }: AuthFormProps) => {
                     </FormItem>
                   )}
                 />
-              )}
+              )} */}
 
               <FormField
                 control={form.control}

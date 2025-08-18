@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+// import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { CallTranscript, InterviewFeedback, analyzeTranscript } from '@/lib/actions/general.action'
 import { toast } from 'sonner'
@@ -13,8 +13,8 @@ interface FeedbackDisplayProps {
   userId: string
 }
 
-const FeedbackDisplay = ({ transcript, userId }: FeedbackDisplayProps) => {
-  const router = useRouter()
+const FeedbackDisplay = ({ transcript }: FeedbackDisplayProps) => {
+  // const router = useRouter()
   const [feedback, setFeedback] = useState<InterviewFeedback | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [hasAnalyzed, setHasAnalyzed] = useState(false)

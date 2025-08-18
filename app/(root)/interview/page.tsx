@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/lib/actions/auth.action";
 import { getQuestionSet, getRandomQuestion, getAssistantId } from "@/lib/interview-templates";
 
 interface InterviewPageProps {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 const InterviewPage = async ({ searchParams }: InterviewPageProps) => {

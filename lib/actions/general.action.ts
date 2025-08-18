@@ -353,7 +353,7 @@ export async function updateInterviewSession(params: {
     }
 
     // Remove sessionId from update data
-    delete (updateData as any).sessionId
+    delete (updateData as Record<string, unknown>).sessionId
 
     await adminDb.collection('interview-sessions').doc(params.sessionId).update(updateData)
     
@@ -508,7 +508,7 @@ export async function getUserInterviewFeedbacks(userId: string) {
       feedbacks.push({
         id: doc.id,
         ...doc.data(),
-      } as any)
+      } as { id: string; userId: string; transcriptId: string; interviewId?: string; feedback: InterviewFeedback; analyzedAt: string })
     })
 
     // If no feedbacks exist, create a sample one for demonstration
@@ -521,7 +521,7 @@ export async function getUserInterviewFeedbacks(userId: string) {
         feedbacks.push({
           id: doc.id,
           ...doc.data(),
-        } as any)
+        } as { id: string; userId: string; transcriptId: string; interviewId?: string; feedback: InterviewFeedback; analyzedAt: string })
       })
     }
 

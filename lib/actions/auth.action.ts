@@ -34,11 +34,11 @@ export async function signUp({ uid, name, email, photoURL }: SignUpParams) {
   }
 }
 
-export async function signIn({ email, idToken }: SignInParams) {
+export async function signIn({ idToken }: SignInParams) {
   try {
     // Verify the ID token and create session cookie
-    const decodedToken = await adminAuth.verifyIdToken(idToken)
-    const uid = decodedToken.uid
+    await adminAuth.verifyIdToken(idToken)
+    // const uid = decodedToken.uid
 
     // Create session cookie (expires in 5 days)
     const sessionCookie = await adminAuth.createSessionCookie(idToken, {

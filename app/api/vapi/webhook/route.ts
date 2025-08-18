@@ -66,7 +66,7 @@ const messageBuffers = new Map<string, {
 export async function POST(request: NextRequest) {
   try {
     // Verify VAPI webhook signature (implement based on your setup)
-    const signature = request.headers.get('x-vapi-signature');
+    // const signature = request.headers.get('x-vapi-signature');
     // TODO: Implement signature verification
     
     const event: VAPIWebhookEvent = await request.json();
@@ -152,12 +152,12 @@ async function handleTranscriptEvent(event: VAPIWebhookEvent) {
   
   console.log(`📝 Final transcript for call ${callId}: ${role} - "${transcript.substring(0, 50)}..."`);
   
-  const buffer = messageBuffers.get(callId) || {
-    assistant: '',
-    user: '',
-    lastAssistantTime: 0,
-    lastUserTime: 0
-  };
+  // const buffer = messageBuffers.get(callId) || {
+  //   assistant: '',
+  //   user: '',
+  //   lastAssistantTime: 0,
+  //   lastUserTime: 0
+  // };
   
   const speaker = role === 'assistant' ? 'Interviewer' : 'You';
   const currentTranscript = callTranscripts.get(callId) || [];

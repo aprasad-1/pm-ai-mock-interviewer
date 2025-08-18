@@ -14,7 +14,8 @@ const InterviewsPage = async () => {
     redirect('/sign-in')
   }
   
-  const { feedbacks } = await getUserInterviewFeedbacks(user.uid)
+  const result = await getUserInterviewFeedbacks(user.uid)
+  const feedbacks = result.success ? result.feedbacks : []
 
   return (
     <div className="space-y-8">

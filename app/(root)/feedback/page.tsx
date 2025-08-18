@@ -5,7 +5,7 @@ import { getTranscript } from '@/lib/actions/general.action'
 import FeedbackDisplay from '@/components/FeedbackDisplay'
 
 interface FeedbackPageProps {
-  searchParams: { [key: string]: string | string[] | undefined }
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
 const FeedbackPage = async ({ searchParams }: FeedbackPageProps) => {

@@ -156,14 +156,14 @@ const Agent = ({ userName, userID, assistantId, interviewQuestions = [], questio
 
     const handleMessage = (message: unknown) => {
       if (message && typeof message === 'object' && 'type' in message && message.type === 'transcript' && 'transcript' in message && message.transcript) {
-        const role: 'assistant' | 'user' = (message as any).role === 'assistant' ? 'assistant' : 'user';
-        const transcriptText = String((message as any).transcript).trim();
+        const role: 'assistant' | 'user' = (message as Record<string, unknown>).role === 'assistant' ? 'assistant' : 'user';
+        const transcriptText = String((message as Record<string, unknown>).transcript).trim();
 
-        if ((message as any).transcriptType === 'partial') {
+        if ((message as Record<string, unknown>).transcriptType === 'partial') {
           const newTranscript: Message = { role, content: transcriptText, timestamp: Date.now() };
           setActiveTranscript(newTranscript);
           setLastActiveTranscript(newTranscript);
-        } else if ((message as any).transcriptType === 'final') {
+        } else if ((message as Record<string, unknown>).transcriptType === 'final') {
           setConversation((prev) => {
             const lastMessage = prev[prev.length - 1];
             
@@ -212,18 +212,21 @@ const Agent = ({ userName, userID, assistantId, interviewQuestions = [], questio
     };
 
     const handleError = (error: unknown) => {
-      if (error && typeof error === 'object' && 'preventDefault' in error && typeof (error as any).preventDefault === 'function') {
-        (error as any).preventDefault();
+      if (error && typeof error === 'object' && error !== null && 'preventDefault' in error) {
+        const errorObj = error as { preventDefault: () => void };
+        if (typeof errorObj.preventDefault === 'function') {
+          errorObj.preventDefault();
+        }
       }
       
       // Handle empty error objects (common VAPI issue)
-      if (!error || (typeof error === 'object' && Object.keys(error).length === 0)) {
+      if (!error || (typeof error === 'object' && error !== null && Object.keys(error as Record<string, unknown>).length === 0)) {
         return;
       }
 
-      const errorMessage = error && typeof error === 'object' && 'message' in error ? String((error as any).message) : '';
-      const errorType = error && typeof error === 'object' && 'type' in error ? String((error as any).type) : '';
-      const errorCode = error && typeof error === 'object' && 'code' in error ? Number((error as any).code) : 0;
+      const errorMessage = error && typeof error === 'object' && 'message' in error ? String((error as Record<string, unknown>).message) : '';
+      const errorType = error && typeof error === 'object' && 'type' in error ? String((error as Record<string, unknown>).type) : '';
+      const errorCode = error && typeof error === 'object' && 'code' in error ? Number((error as Record<string, unknown>).code) : 0;
 
       // Check for VAPI API errors
       if (errorCode && (errorCode >= 400 && errorCode < 500)) {
