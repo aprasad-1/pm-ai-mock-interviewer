@@ -1,8 +1,24 @@
-# PM Interviewer - Local Development Setup
+# PM Interviewer
 
-AI-powered PM interview practice platform built with Next.js 15, Firebase, and Tailwind CSS.
+AI-powered Product Manager interview practice platform built with Next.js 15, Firebase, and VAPI.
 
-## Quick Setup
+## Features
+
+- 🤖 **AI-Powered Interviews**: Practice with realistic AI interviewers
+- 🎤 **Voice Conversations**: Natural voice-based interview experience
+- 📊 **Instant Feedback**: Get detailed analysis and scoring
+- 📱 **Mobile Optimized**: Works seamlessly on all devices
+- 🔐 **Secure Authentication**: Firebase-based user management
+- 📚 **Multiple Categories**: Product design, strategy, technical, and behavioral questions
+
+## Tech Stack
+
+- **Frontend**: Next.js 15 (App Router), TypeScript, Tailwind CSS
+- **Backend**: Firebase (Auth, Firestore), VAPI AI
+- **AI**: OpenAI GPT-4, VAPI Voice AI
+- **UI**: shadcn/ui components, React Hook Form + Zod
+
+## Quick Start
 
 ### 1. Clone and Install
 ```bash
@@ -11,12 +27,11 @@ cd pm-ai-mock-interviewer
 npm install
 ```
 
-
-### 3. Environment Variables
+### 2. Environment Variables
 Create `.env.local` in root:
 
 ```env
-# Get these from Firebase 
+# Firebase Configuration
 NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
@@ -24,12 +39,29 @@ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 
+# Firebase Admin (Server-side)
 FIREBASE_PROJECT_ID=your_project_id
 FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your_project.iam.gserviceaccount.com
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nyour_private_key_content\n-----END PRIVATE KEY-----\n"
+
+# VAPI AI Configuration
+NEXT_PUBLIC_VAPI_API_KEY=your_vapi_api_key
+NEXT_PUBLIC_VAPI_ASSISTANT_ID=your_default_assistant_id
+
+# Optional: Category-specific assistants
+NEXT_PUBLIC_VAPI_ASSISTANT_PRODUCT_DESIGN=assistant_id_for_pm_interviews
+NEXT_PUBLIC_VAPI_ASSISTANT_TECHNICAL=assistant_id_for_technical_interviews
+NEXT_PUBLIC_VAPI_ASSISTANT_BEHAVIORAL=assistant_id_for_behavioral_interviews
+NEXT_PUBLIC_VAPI_ASSISTANT_EXECUTION=assistant_id_for_execution_interviews
+NEXT_PUBLIC_VAPI_ASSISTANT_ESTIMATION=assistant_id_for_estimation_interviews
+NEXT_PUBLIC_VAPI_ASSISTANT_ANALYTICAL=assistant_id_for_analytical_interviews
+NEXT_PUBLIC_VAPI_ASSISTANT_PRODUCT_STRATEGY=assistant_id_for_strategy_interviews
+
+# Base URL for production
+NEXT_PUBLIC_BASE_URL=https://your-domain.com
 ```
 
-### 4. Run Development Server
+### 3. Run Development Server
 ```bash
 npm run dev
 ```
@@ -38,59 +70,73 @@ Open [http://localhost:3000](http://localhost:3000)
 ## Project Structure
 ```
 app/
-├── (auth)/          # Sign-in/up pages
-├── (root)/          # Protected main app
-├── globals.css      # Tailwind styles
+├── (auth)/          # Authentication pages
+├── (root)/          # Protected main application
+├── api/             # API routes
+├── globals.css      # Global styles
 └── layout.tsx       # Root layout
 
 components/
 ├── ui/              # shadcn/ui components
-├── AuthForm.tsx     # Login/signup form
-├── InterviewCard.tsx
-└── UserMenu.tsx     # Logout functionality
+├── Agent.tsx        # AI interviewer component
+├── AuthForm.tsx     # Authentication forms
+├── InterviewCard.tsx # Interview display components
+└── UserMenu.tsx     # User navigation
 
-firebase/
-├── client.ts        # Firebase client config
-└── admin.ts         # Firebase admin config
-
-lib/actions/
-├── auth.action.ts   # Authentication server actions
-└── general.action.ts # Data fetching
+lib/
+├── actions/         # Server actions
+├── firebase/        # Firebase configuration
+├── interview-templates.ts # Interview question sets
+└── vapi.sdk.ts      # VAPI AI integration
 ```
-
-## Key Features Working
-- ✅ Email/password authentication
-- ✅ Google sign-in
-- ✅ Session management with cookies
-- ✅ Route protection
-- ✅ Responsive UI with Tailwind CSS v4
-- ✅ Toast notifications
 
 ## Development Commands
 ```bash
-npm run dev          # Start dev server
+npm run dev          # Start development server
 npm run build        # Build for production
+npm run start        # Start production server
 npm run lint         # Run ESLint
 ```
 
-## Tech Stack
-- **Next.js 15** - App Router, Server Actions
-- **TypeScript** - Type safety
-- **Firebase** - Auth + Firestore
-- **Tailwind CSS v4** - Styling
-- **shadcn/ui** - UI components
-- **React Hook Form + Zod** - Form handling
+## Deployment
 
-## Common Issues
-- **Firestore index errors**: Click the provided link in error to create indexes
-- **Auth not working**: Check Firebase config and authorized domains
-- **Env vars not loading**: Restart dev server after adding `.env.local`
+### Vercel (Recommended)
+1. Connect your GitHub repository to Vercel
+2. Set environment variables in Vercel dashboard
+3. Deploy automatically on push to main branch
 
-## Next Steps
-- Add interview creation flow
-- Implement AI interviewer chat
-- Add interview history/results
-- Deploy to Vercel
+### Manual Deployment
+```bash
+npm run build
+npm run start
+```
 
----
-*Questions? Check the terminal output or Firebase console for detailed error messages.*
+## Environment Setup
+
+### Firebase Setup
+1. Create a new Firebase project
+2. Enable Authentication (Email/Password, Google)
+3. Create Firestore database
+4. Download service account key for admin SDK
+
+### VAPI AI Setup
+1. Sign up at [vapi.ai](https://vapi.ai)
+2. Create assistants for different interview categories
+3. Get your API key and assistant IDs
+4. Configure webhook endpoints if needed
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+For support, email support@pminterviewer.com or create an issue in the repository.

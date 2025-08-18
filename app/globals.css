@@ -141,6 +141,29 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Prevent zoom on input focus for iOS */
+    -webkit-text-size-adjust: 100%;
+    /* Improve touch scrolling */
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Mobile-specific optimizations */
+  @media (max-width: 640px) {
+    html {
+      /* Prevent horizontal scroll */
+      overflow-x: hidden;
+    }
+    
+    /* Improve button touch targets */
+    button, .btn-primary, .btn-secondary {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    /* Better input handling on mobile */
+    input, textarea {
+      font-size: 16px; /* Prevents zoom on iOS */
+    }
   }
   p {
     @apply text-light-100;
@@ -211,18 +234,18 @@
   }
 
   .call-view {
-    @apply flex sm:flex-row flex-col gap-10 items-center justify-between w-full;
+    @apply flex sm:flex-row flex-col gap-6 sm:gap-10 items-center justify-between w-full;
 
     h3 {
-      @apply text-center text-primary-100 mt-5;
+      @apply text-center text-primary-100 mt-3 sm:mt-5 text-lg sm:text-xl;
     }
 
     .card-interviewer {
-      @apply flex-center flex-col gap-2 p-7 h-[400px] blue-gradient-dark rounded-lg border-2 border-primary-200/50 flex-1 sm:basis-1/2 w-full;
+      @apply flex-center flex-col gap-2 p-4 sm:p-7 h-[300px] sm:h-[400px] blue-gradient-dark rounded-lg border-2 border-primary-200/50 flex-1 sm:basis-1/2 w-full;
     }
 
     .avatar {
-      @apply z-10 flex items-center justify-center blue-gradient rounded-full size-[120px] relative;
+      @apply z-10 flex items-center justify-center blue-gradient rounded-full size-[80px] sm:size-[120px] relative;
 
       .animate-speak {
         @apply absolute inline-flex size-5/6 animate-ping rounded-full bg-primary-200 opacity-75;
@@ -242,10 +265,10 @@
     @apply border-gradient p-0.5 rounded-2xl w-full;
 
     .transcript {
-      @apply dark-gradient rounded-2xl  min-h-12 px-5 py-3 flex items-center justify-center;
+      @apply dark-gradient rounded-2xl min-h-12 px-3 sm:px-5 py-3 flex items-center justify-center;
 
       p {
-        @apply text-lg text-center text-white;
+        @apply text-base sm:text-lg text-center text-white;
       }
     }
   }
@@ -263,15 +286,15 @@
   }
 
   .root-layout {
-    @apply flex mx-auto max-w-7xl flex-col gap-12 my-12 px-16 max-sm:px-4 max-sm:my-8;
+    @apply flex mx-auto max-w-7xl flex-col gap-8 sm:gap-12 my-6 sm:my-12 px-4 sm:px-8 lg:px-16;
   }
 
   .card-cta {
-    @apply flex flex-row blue-gradient-dark rounded-3xl px-16 py-6 items-center justify-between max-sm:px-4;
+    @apply flex flex-col sm:flex-row blue-gradient-dark rounded-3xl px-4 sm:px-8 lg:px-16 py-6 items-center justify-between gap-4 sm:gap-0;
   }
 
   .interviews-section {
-    @apply flex flex-wrap gap-4 max-lg:flex-col w-full items-stretch;
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full;
   }
 
   .interview-text {

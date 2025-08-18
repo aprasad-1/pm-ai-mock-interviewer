@@ -69,6 +69,7 @@ const AuthForm = ({ type }: AuthFormProps) => {
           uid: userCredential.user.uid,
           name: userCredential.user.displayName || 'Google User',
           email: userCredential.user.email!,
+          photoURL: userCredential.user.photoURL || undefined,
         })
       }
       

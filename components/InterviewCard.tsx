@@ -1,6 +1,10 @@
+'use client'
+
 import React from 'react'
+import { useRouter } from 'next/navigation'
 import { Interview } from '@/lib/actions/general.action'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 
 interface InterviewCardProps {
   interview: Interview
@@ -8,14 +12,8 @@ interface InterviewCardProps {
 }
 
 const InterviewCard = ({ interview, isUserInterview = false }: InterviewCardProps) => {
-  // Provide fallback values for missing data
-  const technologies = interview.technologies || []
-  const role = interview.role || 'Interview'
-  const type = interview.type || 'general'
-  const difficulty = interview.difficulty || 'intermediate'
-  const duration = interview.duration || 30
-  const createdAt = interview.createdAt || new Date().toISOString()
-
+  const router = useRouter()
+  
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'beginner':
@@ -35,8 +33,54 @@ const InterviewCard = ({ interview, isUserInterview = false }: InterviewCardProp
         return 'text-blue-400 bg-blue-400/10'
       case 'behavioral':
         return 'text-purple-400 bg-purple-400/10'
+      case 'product-design':
+        return 'text-indigo-400 bg-indigo-400/10'
       default:
         return 'text-gray-400 bg-gray-400/10'
+    }
+  }
+
+  // Provide fallback values for missing data
+  const technologies = interview.technologies || []
+  const role = interview.role || 'Interview'
+  const type = interview.type || 'general'
+  const difficulty = interview.difficulty || 'intermediate'
+  const duration = interview.duration || 30
+  const createdAt = interview.createdAt || new Date().toISOString()
+
+  const handleStartInterview = async () => {
+    try {
+      // Navigate to interview page with parameters
+      const searchParams = new URLSearchParams({
+        type: type,
+        interviewId: interview.id,
+        role: role
+      })
+      
+      router.push(`/interview?${searchParams.toString()}`)
+      
+    } catch (error) {
+      console.error('Error starting interview:', error)
+      // Only show error toast for actual failures
+      toast.error('Failed to start interview. Please try again.')
+    }
+  }
+
+  const handleResumeInterview = async () => {
+    try {
+      const searchParams = new URLSearchParams({
+        type: type,
+        interviewId: interview.id,
+        role: role,
+        resume: 'true'
+      })
+      
+      router.push(`/interview?${searchParams.toString()}`)
+      
+    } catch (error) {
+      console.error('Error resuming interview:', error)
+      // Only show error toast for actual failures
+      toast.error('Failed to resume interview. Please try again.')
     }
   }
 
@@ -48,7 +92,7 @@ const InterviewCard = ({ interview, isUserInterview = false }: InterviewCardProp
             <h3 className="text-xl font-semibold text-white">{role}</h3>
             <div className="flex gap-2">
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(type)}`}>
-                {type}
+                {type === 'behavioral' && role.includes('Product Design') ? 'product-design' : type}
               </span>
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(difficulty)}`}>
                 {difficulty}
@@ -58,8 +102,12 @@ const InterviewCard = ({ interview, isUserInterview = false }: InterviewCardProp
 
           <div className="flex items-center gap-2 text-sm text-light-100">
             <span>{duration} min</span>
-            <span>•</span>
-            <span>{technologies.length} {technologies.length === 1 ? 'technology' : 'technologies'}</span>
+            {technologies.length > 0 && (
+              <>
+                <span>•</span>
+                <span>{technologies.length} {technologies.length === 1 ? 'technology' : 'technologies'}</span>
+              </>
+            )}
           </div>
 
           {technologies.length > 0 && (
@@ -85,6 +133,7 @@ const InterviewCard = ({ interview, isUserInterview = false }: InterviewCardProp
           <Button 
             className={isUserInterview ? "btn-secondary" : "btn-primary"}
             size="sm"
+            onClick={isUserInterview ? handleResumeInterview : handleStartInterview}
           >
             {isUserInterview ? 'Resume' : 'Start Interview'}
           </Button>
