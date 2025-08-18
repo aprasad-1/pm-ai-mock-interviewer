@@ -180,16 +180,40 @@ export async function saveCallTranscript(params: {
 // Get transcript by ID
 export async function getTranscript(transcriptId: string) {
   try {
-    const transcriptDoc = await adminDb.collection('transcripts').doc(transcriptId).get()
+    // First try to get from webhook transcripts (call-transcripts collection)
+    let transcriptDoc = await adminDb.collection('call-transcripts').doc(transcriptId).get()
     
+    if (transcriptDoc.exists) {
+      console.log('📄 Found webhook transcript:', transcriptId)
+      const transcriptData = transcriptDoc.data()
+      
+      // Convert webhook format to expected format
+      return {
+        success: true,
+        transcript: {
+          id: transcriptDoc.id,
+          userId: transcriptData?.userId || 'unknown', // Webhook transcripts might not have userId
+          transcript: transcriptData?.transcript || [],
+          callDuration: transcriptData?.callDuration || 0,
+          callStartTime: transcriptData?.createdAt || new Date().toISOString(),
+          callEndTime: transcriptData?.callEndTime || new Date().toISOString(),
+          createdAt: transcriptData?.createdAt || new Date().toISOString()
+        } as CallTranscript
+      }
+    }
+    
+    // Fallback to client transcripts (transcripts collection)
+    transcriptDoc = await adminDb.collection('transcripts').doc(transcriptId).get()
+
     if (!transcriptDoc.exists) {
       throw new Error('Transcript not found')
     }
 
+    console.log('📄 Found client transcript:', transcriptId)
     const transcriptData = transcriptDoc.data() as CallTranscript
-    
-    return { 
-      success: true, 
+
+    return {
+      success: true,
       transcript: { ...transcriptData, id: transcriptDoc.id } as CallTranscript
     }
   } catch (error) {

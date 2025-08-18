@@ -69,13 +69,14 @@ const FeedbackDisplay = ({ transcript, userId }: FeedbackDisplayProps) => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Header with back button */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 px-4">
         <Link href="/">
-          <Button variant="outline" size="sm" className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="flex items-center gap-2 min-h-[44px]">
             <ArrowLeft className="w-4 h-4" />
-            Back to Home
+            <span className="hidden sm:inline">Back to Home</span>
+            <span className="sm:hidden">Back</span>
           </Button>
         </Link>
       </div>
@@ -84,7 +85,7 @@ const FeedbackDisplay = ({ transcript, userId }: FeedbackDisplayProps) => {
       <div className="card-border">
         <div className="card p-6">
           <h2 className="text-2xl font-semibold text-white mb-4">Interview Summary</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="flex items-center gap-3">
               <Clock className="w-5 h-5 text-primary-200" />
               <div>
@@ -119,14 +120,57 @@ const FeedbackDisplay = ({ transcript, userId }: FeedbackDisplayProps) => {
           <div className="bg-dark-300 rounded-lg p-4 max-h-96 overflow-y-auto">
             {transcript.transcript.length > 0 ? (
               <div className="space-y-3">
-                {transcript.transcript.map((message, index) => (
-                  <div key={index} className="text-light-100 leading-relaxed">
-                    <span className="text-primary-200 font-medium">
-                      {index % 2 === 0 ? 'Interviewer: ' : 'You: '}
-                    </span>
-                    {message}
-                  </div>
-                ))}
+                {transcript.transcript.map((message, index) => {
+                  // Parse the message to extract speaker and content
+                  let speaker = '';
+                  let content = message;
+                  
+                  // Check if message already has speaker format (Speaker: message)
+                  if (message.includes(':')) {
+                    const colonIndex = message.indexOf(':');
+                    const potentialSpeaker = message.substring(0, colonIndex).trim();
+                    
+                    // If it looks like a speaker name (Interviewer, You, etc.)
+                    if (potentialSpeaker === 'Interviewer' || potentialSpeaker === 'You') {
+                      speaker = potentialSpeaker;
+                      content = message.substring(colonIndex + 1).trim();
+                    } else {
+                      // This might be a malformed entry, skip if it's too short or looks wrong
+                      if (message.trim().length < 10) {
+                        return null; // Skip very short/incomplete entries
+                      }
+                      // Fallback to alternating pattern
+                      speaker = index % 2 === 0 ? 'Interviewer' : 'You';
+                      content = message;
+                    }
+                  } else {
+                    // No colon found - check if it's a complete message
+                    if (message.trim().length < 10) {
+                      return null; // Skip very short entries
+                    }
+                    // Fallback to alternating pattern
+                    speaker = index % 2 === 0 ? 'Interviewer' : 'You';
+                    content = message;
+                  }
+                  
+                  // Skip empty content
+                  if (!content.trim()) {
+                    return null;
+                  }
+                  
+                  return (
+                    <div key={`${index}-${speaker}`} className="text-light-100 leading-relaxed mb-3">
+                      <div className="flex flex-col">
+                        <span className="text-primary-200 font-medium text-sm mb-1">
+                          {speaker}
+                        </span>
+                        <span className="text-light-100 pl-4 border-l-2 border-primary-200/20">
+                          {content}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                }).filter(Boolean)}
               </div>
             ) : (
               <p className="text-light-400 text-center py-8">
@@ -168,7 +212,7 @@ const FeedbackDisplay = ({ transcript, userId }: FeedbackDisplayProps) => {
               </div>
 
               {/* Category Scores */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {feedback.categoryScores.map((category, index) => (
                   <div key={index} className="bg-dark-300 p-4 rounded-lg">
                     <div className="flex items-center justify-between mb-2">
@@ -183,7 +227,7 @@ const FeedbackDisplay = ({ transcript, userId }: FeedbackDisplayProps) => {
               </div>
 
               {/* Strengths and Areas for Improvement */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div>
                   <h3 className="font-semibold text-white mb-3">Strengths</h3>
                   <ul className="space-y-2">
@@ -222,18 +266,18 @@ const FeedbackDisplay = ({ transcript, userId }: FeedbackDisplayProps) => {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex justify-center gap-4">
-        <Link href="/">
-          <Button className="btn-secondary">
-            Back to Home
-          </Button>
-        </Link>
-        <Link href="/interview?type=product-design">
-          <Button className="btn-primary">
-            Take Another Interview
-          </Button>
-        </Link>
-      </div>
+                   <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 px-4">
+               <Link href="/" className="w-full sm:w-auto">
+                 <Button className="btn-secondary w-full sm:w-auto min-h-[44px]">
+                   Back to Home
+                 </Button>
+               </Link>
+               <Link href="/interview?type=product-design" className="w-full sm:w-auto">
+                 <Button className="btn-primary w-full sm:w-auto min-h-[44px]">
+                   Take Another Interview
+                 </Button>
+               </Link>
+             </div>
     </div>
   )
 }

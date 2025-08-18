@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react'
-import { InterviewFeedback } from '@/lib/actions/general.action'
+import { InterviewFeedback, getTranscript } from '@/lib/actions/general.action'
 import InterviewFeedbackModal from './InterviewFeedbackModal'
 
 interface InterviewFeedbackCardProps {
@@ -15,8 +15,17 @@ interface InterviewFeedbackCardProps {
   }
 }
 
+interface TranscriptData {
+  transcript: string[]
+  callDuration: number
+  callStartTime: string
+  callEndTime: string
+}
+
 const InterviewFeedbackCard = ({ feedbackData }: InterviewFeedbackCardProps) => {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [transcriptData, setTranscriptData] = useState<TranscriptData | null>(null);
+  const [isLoadingTranscript, setIsLoadingTranscript] = useState(false);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -49,8 +58,25 @@ const InterviewFeedbackCard = ({ feedbackData }: InterviewFeedbackCardProps) => 
       .slice(0, 2)
   }
 
-  const handleCardClick = () => {
-    setShowFeedbackModal(true);
+  const handleCardClick = async () => {
+    setIsLoadingTranscript(true);
+    try {
+      // Fetch transcript data when card is clicked
+      const result = await getTranscript(feedbackData.transcriptId);
+      if (result.success && result.transcript) {
+        setTranscriptData({
+          transcript: result.transcript.transcript,
+          callDuration: result.transcript.callDuration,
+          callStartTime: result.transcript.callStartTime,
+          callEndTime: result.transcript.callEndTime
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching transcript:', error);
+    } finally {
+      setIsLoadingTranscript(false);
+      setShowFeedbackModal(true);
+    }
   };
 
   return (
@@ -59,7 +85,7 @@ const InterviewFeedbackCard = ({ feedbackData }: InterviewFeedbackCardProps) => 
         className="card-border cursor-pointer hover:border-primary-200/40 transition-colors h-full"
         onClick={handleCardClick}
       >
-        <div className="card p-6 h-full flex flex-col">
+        <div className="card p-6 h-full flex flex-col min-h-[400px]">
           <div className="flex items-start justify-between mb-6">
             {/* Left side - Interview Info */}
             <div className="flex-1">
@@ -138,13 +164,20 @@ const InterviewFeedbackCard = ({ feedbackData }: InterviewFeedbackCardProps) => 
 
           {/* Click to expand hint - Always at bottom */}
           <div className="flex items-center justify-between mt-auto">
-            <div className="text-xs text-light-400 flex items-center gap-1">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-              Click to view complete analysis
-            </div>
+            {isLoadingTranscript ? (
+              <div className="text-xs text-light-400 flex items-center gap-2">
+                <div className="animate-spin rounded-full h-3 w-3 border-b border-primary-200"></div>
+                Loading transcript...
+              </div>
+            ) : (
+              <div className="text-xs text-light-400 flex items-center gap-1">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                Click to view analysis & transcript
+              </div>
+            )}
             
             <div className="flex items-center gap-1 text-xs text-light-400">
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -162,6 +195,7 @@ const InterviewFeedbackCard = ({ feedbackData }: InterviewFeedbackCardProps) => 
         feedback={feedbackData.feedback}
         interviewTitle="Interview Analysis"
         date={feedbackData.analyzedAt}
+        transcriptData={transcriptData}
       />
     </>
   )

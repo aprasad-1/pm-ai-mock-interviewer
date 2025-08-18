@@ -8,6 +8,7 @@ export interface SignUpParams {
   uid: string
   name: string
   email: string
+  photoURL?: string
 }
 
 export interface SignInParams {
@@ -15,12 +16,13 @@ export interface SignInParams {
   idToken: string
 }
 
-export async function signUp({ uid, name, email }: SignUpParams) {
+export async function signUp({ uid, name, email, photoURL }: SignUpParams) {
   try {
     // Save user data to Firestore
     await adminDb.collection('users').doc(uid).set({
       name,
       email,
+      photoURL: photoURL || null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     })
@@ -85,6 +87,7 @@ export async function getCurrentUser() {
       uid,
       email: userData?.email,
       name: userData?.name,
+      photoURL: userData?.photoURL,
       createdAt: userData?.createdAt,
     }
   } catch (error) {

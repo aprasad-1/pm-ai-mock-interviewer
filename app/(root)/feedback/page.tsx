@@ -49,13 +49,13 @@ const FeedbackPage = async ({ searchParams }: FeedbackPageProps) => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-4 sm:py-8">
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-4">
+        <div className="text-center mb-6 sm:mb-8 px-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-4">
             Interview Feedback
           </h1>
-          <p className="text-light-100">
+          <p className="text-sm sm:text-base text-light-100">
             Review your interview transcript and get AI-powered analysis
           </p>
         </div>

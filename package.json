@@ -1,12 +1,18 @@
 {
   "name": "pm-ai-mock-interviewer",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "AI-powered Product Manager interview practice platform",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf .next out build dist",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.6",
@@ -38,8 +44,31 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.2.3",
+    "prettier": "^3.0.0",
     "tailwindcss": "^4",
-    "tw-animate-css": "^1.3.6",
     "typescript": "^5"
-  }
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "keywords": [
+    "ai",
+    "interview",
+    "product-manager",
+    "voice",
+    "nextjs",
+    "firebase",
+    "vapi"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/pm-ai-mock-interviewer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/pm-ai-mock-interviewer/issues"
+  },
+  "homepage": "https://github.com/yourusername/pm-ai-mock-interviewer#readme"
 }

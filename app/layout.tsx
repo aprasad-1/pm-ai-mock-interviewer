@@ -8,10 +8,20 @@ const monaSans = Mona_Sans({
   subsets: ["latin"],
 });
 
-
 export const metadata: Metadata = {
   title: "PM Interviewer",
   description: "An AI-powered platform for preparing for PM interviews.",
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'PM Interviewer',
+  },
 };
 
 export default function RootLayout({
@@ -21,9 +31,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark"> 
-      <body
-        className={`${monaSans.className} antialiased pattern`}
-      >
+      <body className={`${monaSans.className} antialiased pattern`}>
         {children}
         <Toaster />
       </body>

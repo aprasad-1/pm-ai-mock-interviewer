@@ -4,12 +4,20 @@ import React from 'react';
 import { InterviewFeedback } from '@/lib/actions/general.action';
 import { Button } from '@/components/ui/button';
 
+interface TranscriptData {
+  transcript: string[]
+  callDuration: number
+  callStartTime: string
+  callEndTime: string
+}
+
 interface InterviewFeedbackModalProps {
   isOpen: boolean;
   onClose: () => void;
   feedback: InterviewFeedback;
   interviewTitle: string;
   date: string;
+  transcriptData?: TranscriptData | null;
 }
 
 const InterviewFeedbackModal = ({ 
@@ -17,7 +25,8 @@ const InterviewFeedbackModal = ({
   onClose, 
   feedback, 
   interviewTitle, 
-  date 
+  date,
+  transcriptData 
 }: InterviewFeedbackModalProps) => {
   if (!isOpen) return null;
 
@@ -37,15 +46,15 @@ const InterviewFeedbackModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-dark-100 rounded-lg border border-dark-200 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-dark-100 rounded-lg border border-dark-200 max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-dark-200">
-          <div>
-            <h2 className="text-2xl font-bold text-white">{interviewTitle}</h2>
-            <p className="text-light-400">Interview completed on {new Date(date).toLocaleDateString('en-US', {
+        <div className="flex items-start justify-between p-4 sm:p-6 border-b border-dark-200">
+          <div className="flex-1 pr-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-white">{interviewTitle}</h2>
+            <p className="text-sm sm:text-base text-light-400">Interview completed on {new Date(date).toLocaleDateString('en-US', {
               year: 'numeric',
-              month: 'long',
+              month: 'short',
               day: 'numeric',
               hour: '2-digit',
               minute: '2-digit'
@@ -61,7 +70,7 @@ const InterviewFeedbackModal = ({
           </button>
         </div>
 
-        <div className="p-6 space-y-8">
+        <div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
           {/* Overall Score */}
           <div className="text-center">
             <div className={`inline-flex items-center gap-4 px-8 py-6 rounded-lg border ${getScoreColor(feedback.totalScore)}`}>
@@ -79,7 +88,7 @@ const InterviewFeedbackModal = ({
           {/* Category Scores */}
           <div>
             <h3 className="text-xl font-semibold text-white mb-6">Detailed Breakdown</h3>
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               {feedback.categoryScores.map((category, index) => (
                 <div key={index} className="card-border">
                   <div className="card p-6">
@@ -144,6 +153,67 @@ const InterviewFeedbackModal = ({
               ))}
             </div>
           </div>
+
+          {/* Transcript Section */}
+          {transcriptData && (
+            <div>
+              <h3 className="text-xl font-semibold text-white mb-4">Interview Transcript</h3>
+              <div className="card-border">
+                <div className="card p-6">
+                  <div className="flex items-center gap-4 mb-4 text-sm text-light-400">
+                    <span>Duration: {Math.floor(transcriptData.callDuration / 60)}m {transcriptData.callDuration % 60}s</span>
+                    <span>•</span>
+                    <span>Date: {new Date(transcriptData.callStartTime).toLocaleDateString()}</span>
+                  </div>
+                  <div className="bg-dark-300 rounded-lg p-4 max-h-64 overflow-y-auto">
+                    {transcriptData.transcript.length > 0 ? (
+                      <div className="space-y-3">
+                        {transcriptData.transcript.map((message, index) => {
+                          let speaker = '';
+                          let content = message;
+
+                          if (message.includes(':')) {
+                            const colonIndex = message.indexOf(':');
+                            const potentialSpeaker = message.substring(0, colonIndex).trim();
+
+                            if (potentialSpeaker === 'Interviewer' || potentialSpeaker === 'You') {
+                              speaker = potentialSpeaker;
+                              content = message.substring(colonIndex + 1).trim();
+                            } else {
+                              speaker = index % 2 === 0 ? 'Interviewer' : 'You';
+                              content = message;
+                            }
+                          } else {
+                            speaker = index % 2 === 0 ? 'Interviewer' : 'You';
+                            content = message;
+                          }
+
+                          if (!content.trim()) return null;
+
+                          return (
+                            <div key={`${index}-${speaker}`} className="text-light-100 leading-relaxed">
+                              <div className="flex flex-col">
+                                <span className="text-primary-200 font-medium text-sm mb-1">
+                                  {speaker}
+                                </span>
+                                <span className="text-light-100 pl-4 border-l-2 border-primary-200/20">
+                                  {content}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        }).filter(Boolean)}
+                      </div>
+                    ) : (
+                      <p className="text-light-400 text-center py-4">
+                        No transcript available for this interview.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Final Assessment */}
           <div>
