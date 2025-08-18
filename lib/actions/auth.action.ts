@@ -29,7 +29,6 @@ export async function signUp({ uid, name, email, photoURL }: SignUpParams) {
 
     return { success: true, message: 'Account created successfully' }
   } catch (error) {
-    console.error('Sign up error:', error)
     throw new Error('Failed to create account. Please try again.')
   }
 }
@@ -56,7 +55,6 @@ export async function signIn({ idToken }: SignInParams) {
 
     return { success: true, message: 'Signed in successfully' }
   } catch (error) {
-    console.error('Sign in error:', error)
     throw new Error('Failed to sign in. Please check your credentials.')
   }
 }
@@ -91,7 +89,6 @@ export async function getCurrentUser() {
       createdAt: userData?.createdAt,
     }
   } catch (error) {
-    console.error('Get current user error:', error)
     return null
   }
 }
@@ -109,7 +106,6 @@ export async function clearSession() {
     
     return { success: true }
   } catch (error) {
-    console.error('Clear session error:', error)
     throw new Error('Failed to sign out. Please try again.')
   }
 }
@@ -125,7 +121,6 @@ export async function signOut() {
       sameSite: 'lax',
     })
   } catch (error) {
-    console.error('Sign out error:', error)
     throw new Error('Failed to sign out. Please try again.')
   }
   

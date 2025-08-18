@@ -159,8 +159,8 @@ const AuthForm = ({ type }: AuthFormProps) => {
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="card-border">
-        <div className="card p-8">
+      <div className="!bg-transparent !border-0" style={{ background: 'transparent !important' }}>
+        <div className="p-8">
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold text-white mb-2">
               {isSignUp ? 'Create Account' : 'Welcome Back'}
@@ -253,7 +253,7 @@ const AuthForm = ({ type }: AuthFormProps) => {
               <span className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+              <span className="bg-transparent px-2 text-light-100">Or continue with</span>
             </div>
           </div>
 
