@@ -1,28 +1,35 @@
 import React from 'react'
 import AuthForm from '@/components/AuthForm'
 
-interface SignInPageProps {
-  searchParams: { [key: string]: string | string[] | undefined }
+// Temporary debug component for production troubleshooting
+const DebugInfo = () => {
+  if (process.env.NODE_ENV === 'production') {
+    return (
+      <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+        <h3 className="text-yellow-400 font-semibold mb-2">Debug Info (Production)</h3>
+        <div className="text-xs text-yellow-300 space-y-1">
+          <p>Firebase API Key: {process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? '✅ Set' : '❌ Missing'}</p>
+          <p>Firebase Domain: {process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ? '✅ Set' : '❌ Missing'}</p>
+          <p>Firebase Project ID: {process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ? '✅ Set' : '❌ Missing'}</p>
+          <p>Base URL: {process.env.NEXT_PUBLIC_BASE_URL || 'Not set'}</p>
+        </div>
+      </div>
+    )
+  }
+  return null
 }
 
-const SignInPage = ({ searchParams }: SignInPageProps) => {
-  const error = searchParams.error as string
-  const message = searchParams.message as string
-
+export default function SignInPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-dark-100 via-dark-200 to-dark-300 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {error && (
-          <div className="mb-4 p-3 sm:p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
-            <p className="text-red-400 text-sm">
-              {message || 'Authentication required to access interviews'}
-            </p>
-          </div>
-        )}
+        <DebugInfo />
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
+          <p className="text-light-100">Sign in to continue practicing</p>
+        </div>
         <AuthForm type="sign-in" />
       </div>
     </div>
   )
 }
-
-export default SignInPage
