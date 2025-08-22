@@ -1,8 +1,9 @@
 import React from "react";
 import { redirect } from "next/navigation";
-import Agent from "@/components/Agent";
 import { getCurrentUser } from "@/lib/actions/auth.action";
+import { getUserProfile } from "@/lib/actions/user.action";
 import { getQuestionSet, getRandomQuestion, getAssistantId } from "@/lib/interview-templates";
+import SimpleInterviewContainer from "@/components/SimpleInterviewContainer";
 
 interface InterviewPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -14,6 +15,19 @@ const InterviewPage = async ({ searchParams }: InterviewPageProps) => {
   if (!user) {
     redirect('/sign-in');
   }
+
+  // Get user profile for wallet information
+  let userProfile;
+  try {
+    userProfile = await getUserProfile();
+  } catch (error) {
+    // If we can't get profile, continue with basic user info
+    userProfile = null;
+  }
+
+  // Check if user has enough minutes for the interview
+  const requiredMinutes = 30;
+  const hasEnoughMinutes = userProfile ? userProfile.walletMinutes >= requiredMinutes : false;
 
   // Get interview parameters from URL
   const resolvedSearchParams = await searchParams;
@@ -61,24 +75,31 @@ const InterviewPage = async ({ searchParams }: InterviewPageProps) => {
               </p>
             </div>
 
-            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-dark-200/50 rounded-full border border-primary-200/20">
-              <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span className="text-xs sm:text-sm text-light-200">AI-Powered Interview Experience</span>
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-dark-200/50 rounded-full border border-primary-200/20">
+                <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="text-xs sm:text-sm text-light-200">AI-Powered Interview Experience</span>
+              </div>
+              
+
             </div>
           </div>
 
          
-          {/* Interview Agent */}
-          <Agent 
-            userName={user.name || "Candidate"} 
-            userID={user.uid} 
+          {/* Simple Interview Container */}
+          <SimpleInterviewContainer
+            userName={user.name || "Candidate"}
+            userID={user.uid}
             type={interviewType}
             assistantId={assistantId}
             interviewQuestions={interviewQuestions}
             questionSetId={categoryId}
             userPhotoURL={user.photoURL}
+            hasEnoughMinutes={hasEnoughMinutes}
+            walletMinutes={userProfile?.walletMinutes || 0}
+            subscriptionStatus={userProfile?.subscriptionStatus || 'free'}
           />
         </div>
       </div>

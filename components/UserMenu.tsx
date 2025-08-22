@@ -2,10 +2,11 @@
 
 import React from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { clearSession } from '@/lib/actions/auth.action'
 import { Button } from '@/components/ui/button'
-import { User } from 'lucide-react'
+import { User, Settings } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface UserMenuProps {
@@ -53,15 +54,29 @@ const UserMenu = ({ user }: UserMenuProps) => {
           <span className="text-white font-medium">{user.name}</span>
         </div>
       </div>
-      <Button
-        onClick={handleSignOut}
-        variant="outline"
-        size="sm"
-        className="text-primary-200 border-primary-200 hover:bg-primary-200 hover:text-dark-100 min-h-[44px] text-xs sm:text-sm whitespace-nowrap"
-      >
-        <span className="hidden md:inline">Sign Out</span>
-        <span className="md:hidden">Sign Out</span>
-      </Button>
+      
+      <div className="flex items-center gap-2">
+        <Link href="/profile">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-primary-200 hover:bg-primary-200/10 min-h-[44px] text-xs sm:text-sm"
+          >
+            <Settings className="w-4 h-4 mr-1" />
+            <span className="hidden sm:inline">Profile</span>
+          </Button>
+        </Link>
+        
+        <Button
+          onClick={handleSignOut}
+          variant="outline"
+          size="sm"
+          className="text-primary-200 border-primary-200 hover:bg-primary-200 hover:text-dark-100 min-h-[44px] text-xs sm:text-sm whitespace-nowrap"
+        >
+          <span className="hidden md:inline">Sign Out</span>
+          <span className="md:hidden">Sign Out</span>
+        </Button>
+      </div>
     </div>
   )
 }

@@ -23,6 +23,8 @@ export async function signUp({ uid, name, email, photoURL }: SignUpParams) {
       name,
       email,
       photoURL: photoURL || null,
+      subscriptionStatus: 'free',
+      walletMinutes: 30, // Grant 30 free minutes on sign-up
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     })
@@ -64,7 +66,14 @@ export async function getCurrentUser() {
     const cookieStore = await cookies()
     const sessionCookie = cookieStore.get('session')?.value
 
+    console.log('🔍 getCurrentUser debug:', {
+      hasSessionCookie: !!sessionCookie,
+      sessionCookieLength: sessionCookie?.length || 0,
+      timestamp: new Date().toISOString()
+    })
+
     if (!sessionCookie) {
+      console.log('❌ No session cookie found')
       return null
     }
 
@@ -72,23 +81,67 @@ export async function getCurrentUser() {
     const decodedToken = await adminAuth.verifySessionCookie(sessionCookie, true)
     const uid = decodedToken.uid
 
+    console.log('✅ Session cookie verified for user:', uid)
+
     // Get user data from Firestore
     const userDoc = await adminDb.collection('users').doc(uid).get()
     
     if (!userDoc.exists) {
+      console.log('❌ User document not found in Firestore:', uid)
       return null
     }
 
     const userData = userDoc.data()
     
-    return {
+    // Helper function to safely convert Firebase timestamp
+    const convertTimestamp = (timestamp: any): string | null => {
+      try {
+        if (!timestamp) return null
+        
+        // Handle Firebase Timestamp object
+        if (timestamp.seconds) {
+          return new Date(timestamp.seconds * 1000).toISOString()
+        }
+        
+        // Handle string timestamp
+        if (typeof timestamp === 'string') {
+          const date = new Date(timestamp)
+          return isNaN(date.getTime()) ? null : date.toISOString()
+        }
+        
+        // Handle Date object
+        if (timestamp instanceof Date) {
+          return isNaN(timestamp.getTime()) ? null : timestamp.toISOString()
+        }
+        
+        return null
+      } catch (error) {
+        console.log('⚠️ Error converting timestamp:', error)
+        return null
+      }
+    }
+
+    const result = {
       uid,
       email: userData?.email,
       name: userData?.name,
       photoURL: userData?.photoURL,
-      createdAt: userData?.createdAt,
+      subscriptionStatus: userData?.subscriptionStatus || 'free',
+      walletMinutes: userData?.walletMinutes ?? 0,
+      stripeCustomerId: userData?.stripeCustomerId,
+      createdAt: convertTimestamp(userData?.createdAt),
+      updatedAt: convertTimestamp(userData?.updatedAt),
     }
-  } catch (error) {
+
+    console.log('✅ getCurrentUser success for user:', uid, 'with data:', {
+      email: result.email,
+      subscriptionStatus: result.subscriptionStatus,
+      walletMinutes: result.walletMinutes
+    })
+
+    return result
+  } catch (error: any) {
+    console.log('❌ getCurrentUser error:', error.message)
     return null
   }
 }

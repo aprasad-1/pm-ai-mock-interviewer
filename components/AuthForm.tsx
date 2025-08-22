@@ -73,13 +73,18 @@ const AuthForm = ({ type }: AuthFormProps) => {
         })
       }
       
-      await signIn({
+      const signInResult = await signIn({
         email: userCredential.user.email!,
         idToken,
       })
       
+      console.log('✅ Google sign in result:', signInResult)
       toast.success('Signed in with Google successfully!')
-      router.push('/')
+      
+      // Small delay to ensure session cookie is set, then force refresh
+      setTimeout(() => {
+        window.location.href = '/'
+      }, 100)
     } catch (error: unknown) {
       console.error('Google sign-in error:', error)
       
@@ -124,13 +129,18 @@ const AuthForm = ({ type }: AuthFormProps) => {
         
         // Get ID token and create session cookie via server action
         const idToken = await userCredential.user.getIdToken()
-        await signIn({
+        const result = await signIn({
           email: data.email,
           idToken,
         })
         
+        console.log('✅ Sign in result:', result)
         toast.success('Signed in successfully!')
-        router.push('/')
+        
+        // Small delay to ensure session cookie is set, then force refresh
+        setTimeout(() => {
+          window.location.href = '/'
+        }, 100)
       }
     } catch (error: unknown) {
       console.error('Authentication error:', error)

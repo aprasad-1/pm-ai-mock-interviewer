@@ -26,6 +26,8 @@ interface AgentProps {
   interviewQuestions?: string[];
   questionSetId?: string;
   userPhotoURL?: string;
+  onInterviewStateChange?: (isActive: boolean) => void;
+  forceEnd?: boolean;
 }
 
 enum CallStatus {
@@ -36,7 +38,7 @@ enum CallStatus {
   FINISHED = "FINISHED",
 }
 
-const Agent = ({ userName, userID, assistantId, interviewQuestions = [], questionSetId, userPhotoURL }: AgentProps) => {
+const Agent = ({ userName, userID, assistantId, interviewQuestions = [], questionSetId, userPhotoURL, onInterviewStateChange, forceEnd = false }: AgentProps) => {
   const router = useRouter();
   const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -50,6 +52,7 @@ const Agent = ({ userName, userID, assistantId, interviewQuestions = [], questio
   const [initError, setInitError] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [hasAudioPermission, setHasAudioPermission] = useState<boolean | null>(null);
+  const [isInterviewActive, setIsInterviewActive] = useState(false);
   
   // Use ref to track current call status for timeouts
   const callStatusRef = useRef<CallStatus>(CallStatus.INACTIVE);
@@ -59,6 +62,13 @@ const Agent = ({ userName, userID, assistantId, interviewQuestions = [], questio
     setCallStatus(status);
     callStatusRef.current = status;
   }, []);
+
+  // Notify parent component of interview state changes
+  useEffect(() => {
+    if (onInterviewStateChange) {
+      onInterviewStateChange(isInterviewActive);
+    }
+  }, [isInterviewActive, onInterviewStateChange]);
   
   // Use useMemo to ensure VAPI instance is created only once
   const vapiInstance = useMemo(() => {
@@ -98,7 +108,8 @@ const Agent = ({ userName, userID, assistantId, interviewQuestions = [], questio
       return;
     }
 
-    const handleCallStart = () => {
+    const handleCallStart = async () => {
+      console.log('🎯 handleCallStart triggered!')
       setCallStatusWithRef(CallStatus.ACTIVE);
       setIsLoading(false);
       setIsEnding(false);
@@ -107,19 +118,28 @@ const Agent = ({ userName, userID, assistantId, interviewQuestions = [], questio
       setActiveTranscript(null);
       setLastActiveTranscript(null);
       setInitError(null);
+      setIsInterviewActive(true);
+      console.log('✅ Interview set to active - VAPI connected, timer should start now')
     };
 
     const handleCallEnd = async () => {
+      console.log('📞 Call ending...');
       setCallStatusWithRef(CallStatus.FINISHED);
       setIsSpeaking(false);
       setIsLoading(false);
       setActiveTranscript(null);
+      setIsInterviewActive(false);
+
+      // Calculate actual duration
+      const callEndTime = new Date().toISOString();
+      const duration = callStartTime ? 
+        Math.floor((new Date(callEndTime).getTime() - new Date(callStartTime).getTime()) / 1000) : 
+        0;
+      
+      console.log(`⏱️ Interview duration: ${duration} seconds (${Math.ceil(duration / 60)} minutes)`);
 
       if (conversation.length > 0) {
         try {
-          const callEndTime = new Date().toISOString();
-          const duration = Math.floor((new Date(callEndTime).getTime() - new Date(callStartTime).getTime()) / 1000);
-          
           const transcriptStrings = conversation.map(msg => 
             `${msg.role === 'assistant' ? 'Interviewer' : 'You'}: ${msg.content}`
           );
@@ -138,7 +158,8 @@ const Agent = ({ userName, userID, assistantId, interviewQuestions = [], questio
           } else {
             router.push('/?error=transcript_save_failed');
           }
-        } catch {
+        } catch (error) {
+          console.error('Error saving transcript:', error);
           router.push('/?error=transcript_save_failed');
         }
       } else {
@@ -322,6 +343,12 @@ const Agent = ({ userName, userID, assistantId, interviewQuestions = [], questio
       return;
     }
     
+    // Don't start timer here - wait for VAPI to actually connect
+    console.log('🚀 User clicked start - preparing interview')
+    // setIsInterviewActive(true) // Moved to handleCallStart
+
+
+    
     try {
       await vapiInstance.stop();
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -491,6 +518,14 @@ const Agent = ({ userName, userID, assistantId, interviewQuestions = [], questio
       await handleManualEndCall();
     }
   }, [handleManualEndCall, vapiInstance]);
+
+  // Handle forced end from wallet depletion
+  useEffect(() => {
+    if (forceEnd && callStatus === CallStatus.ACTIVE) {
+      console.log('🛑 Force ending interview due to wallet depletion')
+      endCall()
+    }
+  }, [forceEnd, callStatus, endCall]);
 
   // Cleanup on component unmount
   useEffect(() => {

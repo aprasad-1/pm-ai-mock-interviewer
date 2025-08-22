@@ -17,6 +17,14 @@ const Navbar = ({ user }: { user: User | null }) => {
       <Link href="/" className="text-xl sm:text-2xl font-bold text-primary-200 truncate">
         PM Interviewer
       </Link>
+      <div className="hidden md:flex items-center gap-6">
+        <Link href="/interviews" className="text-light-100 hover:text-primary-200 transition-colors">
+          Interviews
+        </Link>
+        <Link href="/feedback" className="text-light-100 hover:text-primary-200 transition-colors">
+          Feedback
+        </Link>
+      </div>
       <div className="flex items-center gap-2 sm:gap-4">
         {user ? (
           <UserMenu user={user} />
