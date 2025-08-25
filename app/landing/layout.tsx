@@ -19,21 +19,17 @@ const LandingNavbar = ({ user }: { user: User | null }) => {
         PM Interviewer
       </Link>
       <div className="hidden md:flex items-center gap-6">
-        {user && (
-          <>
-            <Link href="/interviews" className="text-light-100 hover:text-primary-200 transition-colors">
-              Interviews
-            </Link>
-            <Link href="/feedback" className="text-light-100 hover:text-primary-200 transition-colors">
-              Feedback
-            </Link>
-          </>
-        )}
+        <Link href="/interviews" className="text-light-100 hover:text-primary-200 transition-colors">
+          Interviews
+        </Link>
+        <Link href="/feedback" className="text-light-100 hover:text-primary-200 transition-colors">
+          Feedback
+        </Link>
+        <Link href="/landing" className="text-light-100 hover:text-primary-200 transition-colors">
+          About
+        </Link>
         <Link href="/pricing" className="text-light-100 hover:text-primary-200 transition-colors">
           Pricing
-        </Link>
-        <Link href="#features" className="text-light-100 hover:text-primary-200 transition-colors">
-          Features
         </Link>
       </div>
       <div className="flex items-center gap-2 sm:gap-4">
