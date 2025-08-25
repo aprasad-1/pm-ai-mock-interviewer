@@ -41,6 +41,8 @@ export default function SubscriptionCard({ subscriptionInfo }: SubscriptionCardP
     }
   }
 
+
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'long',
@@ -74,8 +76,19 @@ export default function SubscriptionCard({ subscriptionInfo }: SubscriptionCardP
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-light-600">Current Plan</span>
             {isProUser && (
-              <span className="text-xs bg-primary-200/20 text-primary-200 px-2 py-1 rounded-full">
-                ACTIVE
+              <span className={`text-xs px-2 py-1 rounded-full ${
+                subscriptionInfo.planName.includes('Canceling')
+                  ? 'bg-destructive-200/20 text-destructive-200'
+                  : subscriptionInfo.planName.includes('Payment Required')
+                  ? 'bg-yellow-500/20 text-yellow-400'
+                  : 'bg-primary-200/20 text-primary-200'
+              }`}>
+                {subscriptionInfo.planName.includes('Canceling')
+                  ? 'CANCELING'
+                  : subscriptionInfo.planName.includes('Payment Required')
+                  ? 'PAYMENT REQUIRED'
+                  : 'ACTIVE'
+                }
               </span>
             )}
           </div>
@@ -93,12 +106,23 @@ export default function SubscriptionCard({ subscriptionInfo }: SubscriptionCardP
             <div className="flex items-center gap-2 mb-2">
               <Calendar className="w-4 h-4 text-light-600" />
               <span className="text-sm text-light-600">
-                {isCanceled ? 'Access ends on' : 'Next billing date'}
+                {subscriptionInfo.planName?.includes('Canceling')
+                  ? 'Pro access ends on'
+                  : isCanceled 
+                  ? 'Access ends on' 
+                  : 'Next billing date'
+                }
               </span>
             </div>
             <p className="text-light-100">
               {formatDate(subscriptionInfo.currentPeriodEnd)}
             </p>
+            {subscriptionInfo.planName?.includes('Canceling') && (
+              <p className="text-xs text-destructive-200 mt-1">
+                No more monthly minutes after this date
+              </p>
+            )}
+
             {isCanceled && (
               <div className="mt-2 p-2 bg-warning-200/10 rounded flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 text-warning-200 mt-0.5" />

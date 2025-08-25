@@ -28,8 +28,8 @@ const InterviewsPage = async () => {
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-white">All Interview Analysis</h1>
-          <p className="text-light-100">View all your completed interview analyses and feedback</p>
+          <h1 className="text-3xl font-bold text-white">Interview History & Analysis</h1>
+          <p className="text-light-100">View all your completed interviews with detailed feedback and track your progress</p>
         </div>
       </div>
 
@@ -61,13 +61,20 @@ const InterviewsPage = async () => {
 
       {/* All Interview Cards */}
       <section>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-semibold text-white">All Analyses ({feedbacks.length})</h2>
-          <Link href="/interview?type=product-design">
-            <Button className="btn-primary">
-              New Interview
-            </Button>
-          </Link>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+          <h2 className="text-2xl font-semibold text-white">Interview History ({feedbacks.length})</h2>
+          <div className="flex gap-3">
+            <Link href="/feedback">
+              <Button variant="outline" className="text-primary-200 border-primary-200">
+                View Feedback
+              </Button>
+            </Link>
+            <Link href="/interview?type=product-design">
+              <Button className="btn-primary">
+                New Interview
+              </Button>
+            </Link>
+          </div>
         </div>
         
         {feedbacks.length > 0 ? (

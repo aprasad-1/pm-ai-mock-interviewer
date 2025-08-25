@@ -5,6 +5,7 @@ import { getSubscriptionInfo } from '@/lib/actions/subscription.action'
 import { signOut } from '@/lib/actions/auth.action'
 import ProfileForm from '@/components/ProfileForm'
 import SubscriptionCard from '@/components/SubscriptionCard'
+import CheckoutSuccessHandler from '@/components/CheckoutSuccessHandler'
 import { Button } from '@/components/ui/button'
 import { Clock, CreditCard, User, LogOut, Crown } from 'lucide-react'
 
@@ -22,6 +23,7 @@ export default async function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-dark-100 p-4 sm:p-6 lg:p-8">
+      <CheckoutSuccessHandler />
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center">
@@ -44,7 +46,8 @@ export default async function ProfilePage() {
             </div>
             <ProfileForm 
               currentName={userProfile.name} 
-              currentEmail={userProfile.email} 
+              currentEmail={userProfile.email}
+              currentPhotoURL={userProfile.photoURL}
             />
           </div>
 
@@ -59,13 +62,37 @@ export default async function ProfilePage() {
             
             <div className="text-center py-6">
               <div className="text-4xl font-bold text-success-200 mb-2">
-                {userProfile.walletMinutes}
+                {userProfile.walletMinutes || 0}
               </div>
               <p className="text-light-100 text-lg">
                 minutes remaining
               </p>
               <p className="text-light-600 text-sm mt-2">
-                Use these minutes for interview sessions
+                {(() => {
+                  if (subscriptionInfo.status === 'active') {
+                    if (subscriptionInfo.planName?.includes('Canceling')) {
+                      // Canceled but still active until period end
+                      const endDate = subscriptionInfo.currentPeriodEnd ? new Date(subscriptionInfo.currentPeriodEnd) : null
+                      if (endDate) {
+                        return `Subscription ends ${endDate.toLocaleDateString()} - no more monthly minutes`
+                      }
+                      return 'Subscription canceled - no more monthly minutes'
+                    } else {
+                      // Active Pro subscription
+                      const endDate = subscriptionInfo.currentPeriodEnd ? new Date(subscriptionInfo.currentPeriodEnd) : null
+                      if (endDate) {
+                        return `Next 100 minutes: ${endDate.toLocaleDateString()}`
+                      }
+                      return `Pro Plan: +${userProfile.monthlyMinuteAllocation || 100} minutes added monthly`
+                    }
+                  } else if (subscriptionInfo.status === 'canceled') {
+                    return 'Subscription canceled - no monthly minutes'
+                  } else if (subscriptionInfo.status === 'past_due') {
+                    return 'Payment required - update payment to continue receiving monthly minutes'
+                  } else {
+                    return 'Free Plan - upgrade for monthly minutes'
+                  }
+                })()}
               </p>
             </div>
           </div>
@@ -102,20 +129,20 @@ export default async function ProfilePage() {
                 This section will be removed - use the Subscription card above
               </p>
               
-              {/* Temporary migration button - remove after migration */}
+              {/* Temporary wallet migration button - remove after migration */}
               <form action={async () => {
                 'use server'
-                const { runMigration } = await import('@/lib/migrations/run-migration')
-                const result = await runMigration()
-                console.log('Migration result:', result)
+                const { fixWalletSystemMigration } = await import('@/lib/migrations/fix-wallet-system')
+                const result = await fixWalletSystemMigration()
+                console.log('Wallet migration result:', result)
               }}>
                 <Button 
                   type="submit" 
                   variant="outline" 
                   size="sm"
-                  className="w-full mt-2 border-warning-200 text-warning-200 hover:bg-warning-200 hover:text-dark-100"
+                  className="w-full mt-2 border-primary-200 text-primary-200 hover:bg-primary-200 hover:text-dark-100"
                 >
-                  Run Migration (Check Console)
+                  Fix Wallet System (Check Console)
                 </Button>
               </form>
               

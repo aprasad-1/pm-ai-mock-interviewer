@@ -36,11 +36,32 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'User email not found' }, { status: 400 })
     }
 
-    // Check if user already has an active subscription
+    // Check if user already has an active subscription in database
     if (userData?.subscriptionStatus === 'active') {
       return NextResponse.json({ 
         error: 'You already have an active subscription' 
       }, { status: 400 })
+    }
+
+    // Double-check with Stripe to prevent multiple subscriptions
+    if (userData?.stripeCustomerId) {
+      try {
+        const existingSubscriptions = await stripe.subscriptions.list({
+          customer: userData.stripeCustomerId,
+          status: 'active',
+          limit: 1
+        })
+
+        if (existingSubscriptions.data.length > 0) {
+          console.log(`⚠️ User ${userId} has active subscription in Stripe: ${existingSubscriptions.data[0].id}`)
+          return NextResponse.json({ 
+            error: 'You already have an active subscription. Please contact support if you believe this is an error.' 
+          }, { status: 400 })
+        }
+      } catch (error) {
+        console.error('Error checking existing subscriptions:', error)
+        // Continue with checkout if we can't check - better UX
+      }
     }
 
     // Create or retrieve Stripe customer

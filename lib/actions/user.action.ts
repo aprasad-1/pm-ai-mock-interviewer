@@ -44,13 +44,16 @@ export async function getUserProfile(): Promise<UserProfile> {
   }
 }
 
-export async function updateUserProfile(formData: FormData) {
+export async function updateUserProfile(prevState: any, formData: FormData) {
   try {
     const cookieStore = await cookies()
     const sessionCookie = cookieStore.get('session')?.value
 
     if (!sessionCookie) {
-      throw new Error('Unauthorized')
+      return {
+        message: 'Unauthorized - please sign in again',
+        errors: {}
+      }
     }
 
     // Verify session cookie
@@ -60,7 +63,17 @@ export async function updateUserProfile(formData: FormData) {
     const displayName = formData.get('displayName') as string
     
     if (!displayName || displayName.trim().length === 0) {
-      throw new Error('Display name is required')
+      return {
+        message: 'Display name is required',
+        errors: { displayName: ['Display name cannot be empty'] }
+      }
+    }
+
+    if (displayName.trim().length < 2) {
+      return {
+        message: 'Display name must be at least 2 characters',
+        errors: { displayName: ['Display name must be at least 2 characters'] }
+      }
     }
 
     // Update user document in Firestore
@@ -72,10 +85,16 @@ export async function updateUserProfile(formData: FormData) {
     // Revalidate the profile page to show updated data
     revalidatePath('/profile')
     
-    return { success: true, message: 'Profile updated successfully' }
+    return { 
+      message: 'Profile updated successfully',
+      errors: {}
+    }
   } catch (error) {
     console.error('Error updating user profile:', error)
-    throw new Error('Failed to update profile')
+    return {
+      message: 'Failed to update profile. Please try again.',
+      errors: {}
+    }
   }
 }
 
@@ -266,3 +285,5 @@ export async function adminAddWalletMinutes(userId: string, minutes: number): Pr
     return false
   }
 }
+
+

@@ -68,13 +68,13 @@ export default function WalletGuard({
               </div>
               
               <p className="text-sm text-light-100 mb-3">
-                Get unlimited interview minutes plus advanced features
+                Get 100 minutes monthly plus advanced features
               </p>
               
               <ul className="space-y-1 text-sm text-light-100 mb-4">
                 <li className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-success-200 rounded-full"></div>
-                  <span>Unlimited interview time</span>
+                  <span>100 minutes added monthly</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-success-200 rounded-full"></div>
