@@ -1,5 +1,6 @@
 import React from 'react'
 import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 import { getCurrentUser } from '@/lib/actions/auth.action'
 import UserMenu from '@/components/UserMenu'
 
@@ -11,49 +12,53 @@ interface User {
   createdAt: string | null;
 }
 
-const Navbar = ({ user }: { user: User | null }) => {
+const LandingNavbar = ({ user }: { user: User | null }) => {
   return (
     <nav className="flex items-center justify-between p-4 sm:px-6 lg:px-8 border-b">
-      <Link href="/" className="text-xl sm:text-2xl font-bold text-primary-200 truncate">
+      <Link href={user ? "/" : "/landing"} className="text-xl sm:text-2xl font-bold text-primary-200 truncate">
         PM Interviewer
       </Link>
       <div className="hidden md:flex items-center gap-6">
-        <Link href="/interviews" className="text-light-100 hover:text-primary-200 transition-colors">
-          Interviews
-        </Link>
-        <Link href="/feedback" className="text-light-100 hover:text-primary-200 transition-colors">
-          Feedback
-        </Link>
-        <Link href="/landing" className="text-light-100 hover:text-primary-200 transition-colors">
-          About
-        </Link>
+        {user && (
+          <>
+            <Link href="/interviews" className="text-light-100 hover:text-primary-200 transition-colors">
+              Interviews
+            </Link>
+            <Link href="/feedback" className="text-light-100 hover:text-primary-200 transition-colors">
+              Feedback
+            </Link>
+          </>
+        )}
         <Link href="/pricing" className="text-light-100 hover:text-primary-200 transition-colors">
           Pricing
+        </Link>
+        <Link href="#features" className="text-light-100 hover:text-primary-200 transition-colors">
+          Features
         </Link>
       </div>
       <div className="flex items-center gap-2 sm:gap-4">
         {user ? (
           <UserMenu user={user} />
         ) : (
-          <div className="flex items-center gap-2 sm:gap-4">
+          <>
             <Link href="/sign-in">
               <span className="text-primary-200 hover:text-primary-100 transition-colors">
                 Sign In
               </span>
             </Link>
             <Link href="/sign-up">
-              <span className="btn-primary px-4 py-2 text-sm">
+              <Button className="btn-primary px-4 py-2 text-sm">
                 Get Started
-              </span>
+              </Button>
             </Link>
-          </div>
+          </>
         )}
       </div>
     </nav>
   )
 }
 
-const RootLayout = async ({
+const LandingLayout = async ({
   children,
 }: {
   children: React.ReactNode
@@ -62,10 +67,10 @@ const RootLayout = async ({
   
   return (
     <div className="root-layout">
-      <Navbar user={user} />
+      <LandingNavbar user={user} />
       {children}
     </div>
   )
 }
 
-export default RootLayout
+export default LandingLayout

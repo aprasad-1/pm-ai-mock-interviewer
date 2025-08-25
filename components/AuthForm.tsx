@@ -76,6 +76,7 @@ const AuthForm = ({ type }: AuthFormProps) => {
       const signInResult = await signIn({
         email: userCredential.user.email!,
         idToken,
+        photoURL: userCredential.user.photoURL || undefined,
       })
       
       console.log('✅ Google sign in result:', signInResult)
@@ -115,6 +116,7 @@ const AuthForm = ({ type }: AuthFormProps) => {
           uid: userCredential.user.uid,
           name: (data as { name: string; email: string; password: string }).name,
           email: data.email,
+          photoURL: userCredential.user.photoURL || undefined,
         })
         
         toast.success('Account created successfully!')

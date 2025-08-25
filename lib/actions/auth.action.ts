@@ -14,6 +14,7 @@ export interface SignUpParams {
 export interface SignInParams {
   email: string
   idToken: string
+  photoURL?: string
 }
 
 export async function signUp({ uid, name, email, photoURL }: SignUpParams) {
@@ -35,11 +36,23 @@ export async function signUp({ uid, name, email, photoURL }: SignUpParams) {
   }
 }
 
-export async function signIn({ idToken }: SignInParams) {
+export async function signIn({ idToken, photoURL }: SignInParams) {
   try {
     // Verify the ID token and create session cookie
-    await adminAuth.verifyIdToken(idToken)
-    // const uid = decodedToken.uid
+    const decodedToken = await adminAuth.verifyIdToken(idToken)
+    const uid = decodedToken.uid
+
+    // Update user's profile photo if provided (from Google OAuth)
+    if (photoURL) {
+      try {
+        await adminDb.collection('users').doc(uid).update({
+          photoURL: photoURL,
+          updatedAt: new Date().toISOString(),
+        })
+      } catch (error) {
+        console.log('Note: Could not update profile photo, user may not exist yet')
+      }
+    }
 
     // Create session cookie (expires in 5 days)
     const sessionCookie = await adminAuth.createSessionCookie(idToken, {
